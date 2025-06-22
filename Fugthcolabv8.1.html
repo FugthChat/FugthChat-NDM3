@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>FugthAI Studio v8.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/nord.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+      :root {
+        --bg0:#2E3440;--bg1:#3B4252;--bg2:#434C5E;--bg3:#4C566A;
+        --fg0:#ECEFF4;--fg1:#D8DEE9;--accent:#88C0D0;
+        --accent-hover:#8FBCBB;--accent-text:#2E3440;--danger:#BF616A;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      html[data-theme="light"] {
+        --bg0:#fdf6e3;--bg1:#eee8d5;--bg2:#d8d1c1;--bg3:#c9c2b2;
+        --fg0:#586e75;--fg1:#657b83;--accent:#268bd2;
+        --accent-hover:#1a6d9f;--accent-text:#fdf6e3;--danger:#dc322f;
+      }
+      body { font-family: 'Inter', sans-serif; background:var(--bg0); color:var(--fg0); }
+      .sidebar { transition: width 0.3s ease-in-out; }
+      .sidebar-item:hover, .sidebar-item.active { background:var(--bg2); }
+      .copy-btn { opacity:0; transition:opacity .15s ease-in-out; }
+      .message-container:hover .copy-btn { opacity:1; }
+      /* Context Menu */
+      #context-menu { position: absolute; z-index: 100; background-color: var(--bg1); border: 1px solid var(--bg2); border-radius: 8px; box-shadow: var(--shadow); padding: 8px; display: none; }
+      #context-menu button { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 4px; background: none; border: none; color: var(--fg0); cursor: pointer; }
+      #context-menu button:hover { background-color: var(--bg2); }
+      /* Prose custom styling for markdown */
+      .prose { color: var(--fg0); }
+      .prose h1, .prose h2, .prose h3, .prose h4, .prose strong { color: var(--fg0); }
+      .prose a { color: var(--accent); }
+      .prose blockquote { border-left-color: var(--accent); }
+      .prose pre { background-color: #232731; padding: 1rem; border-radius: 0.5rem; color: #d8dee9; font-size: 0.875rem; }
+      .prose code { font-family: 'Courier New', Courier, monospace; background-color: var(--bg2); padding: 2px 4px; border-radius: 4px; }
+      .prose pre code { background-color: transparent; padding: 0; border-radius: 0; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <aside id="left-sidebar" class="sidebar w-72 bg-[var(--bg1)] p-4 flex flex-col border-r border-[var(--bg2)] flex-shrink-0">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-xl font-bold">Fugth<span class="text-[var(--accent)]">AI</span></h1>
+      <button id="theme" class="hover:bg-[var(--bg2)] p-2 rounded">🌙</button>
+    </div>
+    <div id="sidebar-content" class="flex flex-col flex-1 overflow-y-auto">
+        <button id="new-chat-btn" class="w-full py-2 rounded bg-[var(--bg2)] hover:bg-[#5E81AC] mb-4 transition-colors text-sm">
+          <i class="fa-solid fa-plus mr-2"></i>New Chat
+        </button>
+        <div class="flex items-center bg-[var(--bg0)] rounded p-2 mb-4">
+            <i class="fa-solid fa-search text-[var(--fg1)] mr-2"></i>
+            <input id="search-chats-input" class="bg-transparent flex-1 outline-none text-sm" placeholder="Search chats…"/>
+        </div>
+        <nav id="chat-list" class="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1"></nav>
+    </div>
+    <div id="settings-view" class="hidden flex-1 flex-col space-y-4 overflow-y-auto">
+        <button id="back-to-chats" class="text-left text-sm p-2 rounded hover:bg-[var(--bg2)]"><i class="fa-solid fa-arrow-left mr-2"></i> Back to Chats</button>
+        <h3 class="text-lg font-bold text-[var(--accent)]">Settings</h3>
+        <div>
+          <label class="block text-sm font-medium text-[var(--fg1)]">Theme</label>
+          <div class="mt-1 flex gap-2">
+            <button data-theme="dark" class="theme-btn flex-1 py-2 rounded bg-[var(--bg2)] text-sm">Dark</button>
+            <button data-theme="light" class="theme-btn flex-1 py-2 rounded bg-[var(--bg2)] text-sm">Light</button>
+          </div>
+        </div>
+        <div>
+          <label for="colab-url" class="block text-sm font-medium text-[var(--fg1)]">Colab API URL</label>
+          <input id="colab-url" type="text" class="mt-1 w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm" placeholder="https://…ngrok-free.app"/>
+        </div>
+        <div>
+          <label for="colab-password" class="block text-sm font-medium text-[var(--fg1)]">Password / Token</label>
+          <input id="colab-password" type="password" class="mt-1 w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm" value="Fugth"/>
+        </div>
+        <div class="mt-2 flex justify-between items-center">
+            <div id="connection-status" class="text-sm flex items-center gap-2"></div>
+            <button id="modal-connect" class="py-2 px-4 rounded bg-[var(--accent)] text-[var(--accent-text)] hover:bg-[var(--accent-hover)] text-sm disabled:opacity-75 disabled:cursor-wait">Save & Connect</button>
+        </div>
+    </div>
+    <div class="pt-4 border-t border-[var(--bg2)] space-y-2 text-sm">
+      <button id="import-chats-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-file-import w-6"></i><span class="ml-2">Import Chats</span></button>
+      <input type="file" id="import-chats-input" class="hidden" accept=".json">
+      <button id="export-chats-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-file-export w-6"></i><span class="ml-2">Export All Chats</span></button>
+      <button id="settings-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-cog w-6"></i><span class="ml-2">Settings</span></button>
+       <button id="help-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-circle-question w-6"></i><span class="ml-2">Help</span></button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col min-w-0">
+    <header class="p-4 flex justify-between items-center border-b border-[var(--bg2)] flex-shrink-0">
+        <div class="flex items-center">
+            <button id="toggle-left-sidebar" class="p-2 rounded-md hover:bg-[var(--bg2)] mr-2">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <h2 id="chat-title" class="font-semibold truncate"></h2>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="clear-history-btn" class="p-2 rounded-md hover:bg-[var(--bg2)]" title="Clear chat history">
+                <i class="fa-solid fa-broom"></i>
+            </button>
+            <select id="model-select" class="bg-[var(--bg2)] p-2 rounded text-sm" disabled><option>Connect to Colab</option></select>
+            <button id="toggle-right-sidebar" class="p-2 rounded-md hover:bg-[var(--bg2)] lg:hidden">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+    
+    <div id="chat-history" class="flex-1 p-6 space-y-6 overflow-y-auto"></div>
+    
+    <footer class="p-4 flex-shrink-0 bg-[var(--bg0)]">
+      <div id="status-bar" class="h-5 mb-2 hidden items-center gap-2 text-xs">
+        <div id="status-dot" class="w-2 h-2 rounded-full animate-pulse bg-yellow-500"></div><span id="status-text"></span>
+      </div>
+      <div class="relative">
+        <button id="quick-prompts-btn" class="absolute bottom-3.5 left-3.5 w-10 h-10 rounded-full bg-[var(--bg2)] hover:bg-[var(--bg3)] text-[var(--fg0)] flex items-center justify-center transition-colors" title="Quick Prompts">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+        <textarea id="prompt-input" rows="1" class="w-full bg-[var(--bg2)] rounded-lg p-4 pl-16 pr-16 outline-none resize-none transition-all duration-200 focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50" placeholder="Ask anything…" disabled></textarea>
+        <button id="send-btn" class="absolute bottom-3.5 right-3.5 w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-text)] disabled:bg-[var(--bg2)] disabled:cursor-not-allowed flex items-center justify-center transition-colors" disabled>
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+      </div>
+    </footer>
+  </main>
+  
+  <aside id="right-sidebar" class="sidebar lg:w-80 bg-[var(--bg1)] p-4 flex-col border-l border-[var(--bg2)] flex-shrink-0 space-y-4 overflow-y-auto hidden lg:flex">
+      <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
+          <h3 class="font-bold text-[var(--accent)] mb-2">Persona</h3>
+          <select id="persona-select" class="w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"></select>
+      </div>
+      <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
+          <h3 class="font-bold text-[var(--accent)] mb-2">System Prompt</h3>
+          <textarea id="system-prompt-input" rows="12" class="w-full bg-[var(--bg0)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"></textarea>
+      </div>
+  </aside>
+
+  <div id="context-menu">
+      <button id="rename-chat"><i class="fa-solid fa-pen-to-square fa-fw mr-2"></i>Rename</button>
+      <button id="delete-chat"><i class="fa-solid fa-trash-can fa-fw mr-2 text-red-500"></i>Delete</button>
+  </div>
+  
+  <div id="quick-prompts-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+    <div class="bg-[var(--bg1)] p-6 rounded-xl border border-[var(--bg2)] shadow-lg w-full max-w-2xl relative">
+      <button id="modal-close-x" class="absolute top-4 right-4 text-[var(--fg1)] hover:text-[var(--fg0)] text-2xl font-bold">&times;</button>
+      <h3 class="text-lg font-bold text-[var(--accent)] mb-4">Quick Prompts</h3>
+      <div id="quick-prompts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
+        </div>
+    </div>
+  </div>
+  
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = sel => document.querySelector(sel);
+
+    const PERSONAS = {
+        default: { name: 'Default Assistant', prompt: 'You are a helpful, friendly, and versatile AI assistant named FugthAI. You can answer questions, provide explanations, and assist with a wide range of tasks.' },
+        lawyer: { name: 'Lawyer', prompt: 'You are an AI Legal Advisor. Your role is to provide information on legal topics, explain legal concepts, and help draft documents. You are strictly forbidden from providing medical, financial, or any other type of advice outside the legal domain. If a user asks for non-legal advice, you MUST refuse and state clearly: "My expertise is strictly limited to legal matters. I cannot provide advice on that topic."' },
+        dentist: { name: 'Dentist', prompt: 'You are an AI Dental Advisor. Your purpose is to provide information about dental health, oral hygiene, and common dental procedures. You are not a substitute for a real medical professional. You are strictly forbidden from providing advice on any topic outside of dentistry and general oral health. If asked a non-dental question, you MUST refuse and state clearly: "I can only provide information about dental health. For other topics, please consult an appropriate expert."' },
+        sales: { name: 'Sales Expert', prompt: 'You are a master AI Sales Expert. Your goal is to provide users with world-class sales strategies, pitch advice, negotiation tactics, and motivational coaching. You must remain in the persona of a confident, persuasive, and highly knowledgeable sales leader. You are strictly forbidden from engaging in topics outside of sales, marketing, and business development. If asked to, you MUST refuse and pivot back, stating: "That\'s outside my area of expertise, which is sales. Let\'s focus on how we can crush your sales goals."' }
+    };
+    
+    /* ---------- 1. AUTO-CONNECT SETTINGS ---------- */
+    const AUTO_CONNECT_URL   = 'https://9c8c-34-48-204-93.ngrok-free.app'; // <-- your Colab/NGROK URL
+    const AUTO_CONNECT_DELAY = 5000;   // ms between retries (grows 1.5× each fail)
+
+    const QUICK_PROMPTS = [
+        { title: "Explain Something", prompt: "Explain the concept of [topic] in simple terms." },
+        { title: "Write a Poem", prompt: "Write a short poem about [subject]." },
+        { title: "Brainstorm Ideas", prompt: "Brainstorm 5 ideas for a new project about [topic]." },
+        { title: "Summarize Text", prompt: "Summarize the following text for me: [paste text here]." },
+        { title: "Translate to French", prompt: "Translate the following sentence to French: " },
+        { title: "Create a Recipe", prompt: "Give me a simple recipe for [dish]." }
+    ];
+
+    let state = {
+        chats: JSON.parse(localStorage.getItem('fugth_chats_v8.2') || '[]'),
+        activeChatId: null,
+        colabUrl: localStorage.getItem('fugth_colabUrl_v8.2') || AUTO_CONNECT_URL,
+        colabPassword: 'Fugth',
+        isGenerating: false,
+        abortController: null,
+        timer: null,
+        theme: localStorage.getItem('fugth_theme_v8.2') || 'dark'
+    };
+
+    const el = {
+        chatList: $('#chat-list'), chatTitle: $('#chat-title'), chatHistory: $('#chat-history'),
+        promptInput: $('#prompt-input'), sendBtn: $('#send-btn'), newChatBtn: $('#new-chat-btn'),
+        modelSelect: $('#model-select'), settingsBtn: $('#settings-btn'), 
+        modalConnect: $('#modal-connect'),
+        urlInput: $('#colab-url'), passwordInput: $('#colab-password'), connectionStatus: $('#connection-status'),
+        statusBar: $('#status-bar'), statusText: $('#status-text'), searchInput: $('#search-chats-input'),
+        systemPromptInput: $('#system-prompt-input'), themeBtn: $('#theme'), 
+        contextMenu: $('#context-menu'), renameChatBtn: $('#rename-chat'), deleteChatBtn: $('#delete-chat'),
+        leftSidebar: $('#left-sidebar'), rightSidebar: $('#right-sidebar'),
+        toggleLeftSidebar: $('#toggle-left-sidebar'), toggleRightSidebar: $('#toggle-right-sidebar'),
+        sidebarContent: $('#sidebar-content'), settingsView: $('#settings-view'), backToChatsBtn: $('#back-to-chats'),
+        exportChatsBtn: $('#export-chats-btn'), importChatsBtn: $('#import-chats-btn'), importChatsInput: $('#import-chats-input'),
+        helpBtn: $('#help-btn'),
+        clearHistoryBtn: $('#clear-history-btn'),
+        personaSelect: $('#persona-select'),
+        quickPromptsBtn: $('#quick-prompts-btn'),
+        quickPromptsModal: $('#quick-prompts-modal'),
+        quickPromptsList: $('#quick-prompts-list'),
+        modalCloseX: $('#modal-close-x')
+    };
+    
+    function init() {
+        Object.keys(PERSONAS).forEach(key => { el.personaSelect.add(new Option(PERSONAS[key].name, key)); });
+        el.personaSelect.add(new Option("Custom", "custom"));
+        QUICK_PROMPTS.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-[var(--bg2)] rounded-lg hover:bg-[var(--bg3)] cursor-pointer transition-colors';
+            card.innerHTML = `<h4 class="font-bold text-sm text-[var(--accent)]">${p.title}</h4><p class="text-xs text-[var(--fg1)]">${p.prompt}</p>`;
+            card.onclick = () => {
+                el.promptInput.value = p.prompt;
+                el.quickPromptsModal.classList.add('hidden');
+                el.promptInput.focus();
+            };
+            el.quickPromptsList.appendChild(card);
+        });
+
+        if (state.chats.length === 0) createNewChat();
+        state.activeChatId = state.activeChatId || state.chats[0].id;
+        
+        applyTheme();
+        renderChatList();
+        selectChat(state.activeChatId);
+
+        /* ---------- 2. INITIATE AUTO-CONNECT LOOP ---------- */
+        el.urlInput.value = state.colabUrl;
+        el.passwordInput.value = state.colabPassword;
+        if (state.colabUrl) autoConnectLoop();
+        
+        addEventListeners();
+        autoResizeTextarea();
+    }
+
+    function saveChats() { localStorage.setItem('fugth_chats_v8.2', JSON.stringify(state.chats)); }
+    
+    function createNewChat() {
+        const defaultPersona = 'default';
+        const c = { id: Date.now(), name: 'New Chat', history: [], persona: defaultPersona, system_prompt: PERSONAS[defaultPersona].prompt };
+        state.chats.unshift(c);
+        saveChats();
+        return c;
+    }
+
+    function applyTheme() {
+        document.documentElement.setAttribute('data-theme', state.theme);
+        localStorage.setItem('fugth_theme_v8.2', state.theme);
+        el.themeBtn.innerHTML = state.theme === 'dark' ? '☀️' : '🌙';
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            const isActive = btn.dataset.theme === state.theme;
+            btn.classList.toggle('bg-[var(--accent)]', isActive);
+            btn.classList.toggle('text-[var(--accent-text)]', isActive);
+        });
+    }
+
+    function renderChatList(filter = '') {
+        el.chatList.innerHTML = '';
+        const filtered = state.chats.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()));
+        filtered.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `sidebar-item flex items-center p-2 rounded cursor-pointer transition-colors ${c.id === state.activeChatId ? 'active' : ''}`;
+            div.innerHTML = `<i class="fa-regular fa-message w-6 text-center"></i><span class="ml-3 flex-grow truncate text-sm">${c.name}</span>`;
+            div.dataset.chatId = c.id;
+            el.chatList.appendChild(div);
+        });
+    }
+
+    function selectChat(id) {
+        if (!id && state.chats.length > 0) id = state.chats[0].id;
+        else if (!id) id = createNewChat().id;
+
+        state.activeChatId = id;
+        renderChatList(el.searchInput.value);
+        const chat = state.chats.find(c => c.id === id);
+        
+        if (chat) {
+            el.chatTitle.textContent = chat.name;
+            el.systemPromptInput.value = chat.system_prompt;
+            el.personaSelect.value = chat.persona || 'custom';
+            el.chatHistory.innerHTML = '';
+            chat.history.forEach((m, index) => addMessage(m.role, m.text, m.isError, m.meta, false, index));
+            scrollToBottom();
+        }
+    }
+    
+    function addMessage(role, text, isError = false, meta = {}, save = true, index = -1) {
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (!activeChat) return;
+
+        const who = role === 'user' ? 'You' : (isError ? 'System' : PERSONAS[activeChat.persona]?.name || 'Assistant');
+        const messageContainer = document.createElement('div');
+        messageContainer.className = 'message-container';
+        
+        const messageInner = document.createElement('div');
+        messageInner.className = 'flex items-start gap-4';
+        
+        const avatarColor = isError ? 'bg-[var(--danger)]' : role === 'user' ? 'bg-[var(--accent)]' : 'bg-[#A3BE8C]';
+        const avatar = `<div class="w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-xl font-bold text-[var(--accent-text)] flex-shrink-0">${who[0]}</div>`;
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-[var(--bg1)] p-4 rounded-lg relative group max-w-2xl w-full';
+        
+        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const metaString = meta.elapsed ? ` • ${meta.elapsed}ms` : '';
+
+        const textContentDiv = document.createElement('div');
+        textContentDiv.className = 'text-base break-words prose';
+        textContentDiv.innerHTML = marked.parse(text);
+        
+        textContentDiv.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn absolute top-2 right-2 p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all';
+        copyBtn.title = 'Copy';
+        copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+        copyBtn.onclick = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(text);
+            copyBtn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>'; }, 1500);
+        };
+
+        bubble.innerHTML = `<div class="flex justify-between items-center mb-2"><strong class="text-sm text-[var(--fg0)]">${who}</strong><small class="text-xs text-[var(--fg1)]">${timeString}${metaString}</small></div>`;
+        bubble.appendChild(textContentDiv);
+        bubble.appendChild(copyBtn);
+        
+        const bubbleOuter = bubble.outerHTML;
+        messageInner.innerHTML = role === 'user' ? `<div class="flex-grow"></div>${bubbleOuter}${avatar}` : `${avatar}${bubbleOuter}<div class="flex-grow"></div>`;
+        
+        messageContainer.appendChild(messageInner);
+
+        if (role === 'assistant' && !isError) {
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'flex items-center justify-end gap-2 pr-16 mt-2';
+            actionsContainer.innerHTML = `
+                <button data-index="${index}" class="regenerate-btn-inline py-1 px-2 rounded bg-[var(--bg2)] hover:bg-[var(--bg3)] text-xs transition-colors"><i class="fa-solid fa-arrows-rotate mr-1"></i>Regenerate</button>
+                <button class="feedback-btn-inline py-1 px-2 rounded bg-[var(--bg2)] hover:bg-[var(--bg3)] text-xs transition-colors" title="Good Response"><i class="fa-regular fa-thumbs-up"></i></button>
+                <button class="feedback-btn-inline py-1 px-2 rounded bg-[var(--bg2)] hover:bg-[var(--bg3)] text-xs transition-colors" title="Bad Response"><i class="fa-regular fa-thumbs-down"></i></button>
+            `;
+            messageContainer.appendChild(actionsContainer);
+        }
+
+        el.chatHistory.appendChild(messageContainer);
+        scrollToBottom();
+
+        if (save && !isError) {
+            activeChat.history.push({ role, text, isError, meta });
+            saveChats();
+        }
+    }
+
+    function formatHistoryAsZephyrPrompt(chat) {
+        let formattedPrompt = `<|system|>\n${chat.system_prompt}<|endoftext|>\n`;
+        const history = chat.history;
+        history.forEach(msg => {
+            if (msg.role === 'user') formattedPrompt += `<|user|>\n${msg.text}<|endoftext|>\n`;
+            else if (msg.role === 'assistant') formattedPrompt += `<|assistant|>\n${msg.text}<|endoftext|>\n`;
+        });
+        formattedPrompt += `<|assistant|>\n`;
+        return formattedPrompt;
+    }
+    
+    function getGenerationParams() { return { temperature: 0.7, max_tokens: 2048 }; }
+    function scrollToBottom() { el.chatHistory.scrollTop = el.chatHistory.scrollHeight; }
+
+    async function connectToColab() {
+        const url = el.urlInput.value.trim().replace(/\/+$/, '');
+        const pwd = el.passwordInput.value.trim();
+        if (!url) { updateConnectionStatus('failed', 'URL required'); return false; }
+
+        el.modalConnect.disabled = true;
+        el.modalConnect.innerHTML = 'Connecting...';
+        state.colabUrl = url;
+        state.colabPassword = pwd;
+        localStorage.setItem('fugth_colabUrl_v8.2', url);
+        updateConnectionStatus('connecting');
+        
+        try {
+            const res = await fetch(`${url}/models`, { headers: { 'ngrok-skip-browser-warning': 'true', 'Authorization': `Bearer ${state.colabPassword}` } });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const models = await res.json();
+            if (models.error) throw new Error(models.error);
+            
+            el.modelSelect.innerHTML = models.map(m => `<option>${m}</option>`).join('');
+            el.modelSelect.disabled = false;
+            el.promptInput.disabled = false;
+            el.sendBtn.disabled = false;
+            updateConnectionStatus('connected');
+            el.settingsView.classList.add('hidden');
+            el.sidebarContent.classList.remove('hidden');
+            return true; // ✅ connected
+        } catch (e) {
+            updateConnectionStatus('failed', e.message);
+            return false; // ❌ failed
+        } finally {
+            el.modalConnect.disabled = false;
+            el.modalConnect.innerHTML = 'Save & Connect';
+        }
+    }
+
+    /* ---------- 3. KEEP TRYING UNTIL WE’RE CONNECTED ---------- */
+    let retryMs = AUTO_CONNECT_DELAY;
+    async function autoConnectLoop () {
+        const ok = await connectToColab();        // returns true/false (see tweak below)
+        if (!ok) {                                // failed ⇒ schedule another attempt
+            setTimeout(autoConnectLoop, retryMs);
+            retryMs = Math.min(retryMs * 1.5, 60000); // back-off, cap at 60 s
+        } else {
+            retryMs = AUTO_CONNECT_DELAY;         // reset timer on success
+        }
+    }
+    
+    function setGenerating(on) {
+        state.isGenerating = on;
+        el.promptInput.disabled = on;
+        el.sendBtn.innerHTML = on ? '<i class="fa-solid fa-stop"></i>' : '<i class="fa-solid fa-arrow-up"></i>';
+        el.statusBar.classList.toggle('hidden', !on);
+        document.querySelectorAll('.regenerate-btn-inline').forEach(btn => btn.disabled = on);
+        clearInterval(state.timer);
+        if (on) {
+            let start = Date.now();
+            el.statusText.textContent = `Thinking…`;
+            state.timer = setInterval(() => {
+                el.statusText.textContent = `Thinking… ${((Date.now() - start) / 1000).toFixed(1)}s`;
+            }, 100);
+        }
+    }
+    
+    async function getAiResponse(messageHistory) {
+        setGenerating(true);
+        state.ac = new AbortController();
+        const startTime = Date.now();
+        const finalFormattedPrompt = formatHistoryAsZephyrPrompt({ history: messageHistory, system_prompt: state.chats.find(c => c.id === state.activeChatId).system_prompt });
+        const generationParams = getGenerationParams();
+
+        try {
+            const res = await fetch(`${state.colabUrl}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.colabPassword}` },
+                body: JSON.stringify({ model_name: el.modelSelect.value, prompt: finalFormattedPrompt, ...generationParams }),
+                signal: state.ac.signal
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const j = await res.json();
+            if (j.error) throw new Error(j.error);
+            return { success: true, response: j.response, elapsed: Date.now() - startTime };
+        } catch (e) {
+            if (e.name !== 'AbortError') return { success: false, response: `Error: ${e.message}` };
+            return { success: false, response: 'Cancelled' };
+        } finally {
+            setGenerating(false);
+        }
+    }
+
+    function autoResizeTextarea() {
+        el.promptInput.style.height = 'auto';
+        const newHeight = Math.min(el.promptInput.scrollHeight, 200);
+        el.promptInput.style.height = `${newHeight}px`;
+    }
+    
+    function updateConnectionStatus(status, msg = '') {
+        const statusMap = { disconnected: { text: 'Disconnected', color: 'bg-gray-500' }, connecting: { text: 'Connecting…', color: 'bg-yellow-500' }, connected: { text: 'Connected', color: 'bg-green-500' }, failed: { text: `Failed: ${msg}`, color: 'bg-[var(--danger)]' } };
+        const { text, color } = statusMap[status];
+        el.connectionStatus.innerHTML = `<div class="w-3 h-3 rounded-full ${color}"></div><span class="text-sm">${text}</span>`;
+    }
+
+    async function handleSend() {
+        const promptText = el.promptInput.value.trim();
+        if (!promptText || state.isGenerating) return;
+
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (activeChat.history.length === 0) {
+            activeChat.name = promptText.split(' ').slice(0, 4).join(' ');
+            renderChatList();
+            el.chatTitle.textContent = activeChat.name;
+        }
+
+        const currentHistory = [...activeChat.history, { role: 'user', text: promptText }];
+        addMessage('user', promptText, false, {}, false, activeChat.history.length);
+        activeChat.history.push({ role: 'user', text: promptText });
+        saveChats();
+        
+        el.promptInput.value = '';
+        autoResizeTextarea();
+
+        const result = await getAiResponse(activeChat.history);
+        if (result.success) {
+            addMessage('assistant', result.response, false, { elapsed: result.elapsed }, true, activeChat.history.length);
+        } else {
+            addMessage('assistant', result.response, true, {}, false, -1);
+        }
+    }
+
+    async function handleRegenerate(historyIndex) {
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (!activeChat || state.isGenerating) return;
+
+        // History up to the point of regeneration
+        const historyForPrompt = activeChat.history.slice(0, historyIndex);
+        
+        // Remove old messages from UI
+        const messagesToRedraw = [...historyForPrompt];
+        el.chatHistory.innerHTML = '';
+        messagesToRedraw.forEach((m, idx) => addMessage(m.role, m.text, m.isError, m.meta, false, idx));
+        
+        const result = await getAiResponse(historyForPrompt);
+        if (result.success) {
+            activeChat.history = [...historyForPrompt, { role: 'assistant', text: result.response }];
+            saveChats();
+            addMessage('assistant', result.response, false, { elapsed: result.elapsed }, false, historyForPrompt.length);
+        } else {
+            addMessage('assistant', result.response, true, {}, false, -1);
+        }
+    }
+
+    function addEventListeners() {
+        el.sendBtn.onclick = () => state.isGenerating ? state.ac.abort() : handleSend();
+        el.promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }});
+        
+        el.chatHistory.addEventListener('click', e => {
+            const regenButton = e.target.closest('.regenerate-btn-inline');
+            if (regenButton) {
+                const index = parseInt(regenButton.dataset.index, 10);
+                handleRegenerate(index);
+            }
+        });
+        
+        // Modal Listeners
+        el.quickPromptsBtn.onclick = () => el.quickPromptsModal.classList.remove('hidden');
+        el.modalCloseX.onclick = () => el.quickPromptsModal.classList.add('hidden');
+        el.quickPromptsModal.onclick = (e) => { if (e.target === el.quickPromptsModal) el.quickPromptsModal.classList.add('hidden'); };
+
+        // Other listeners
+        el.themeBtn.onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); };
+        el.settingsBtn.onclick = () => { el.sidebarContent.classList.add('hidden'); el.settingsView.classList.remove('hidden'); };
+        el.backToChatsBtn.onclick = () => { el.settingsView.classList.add('hidden'); el.sidebarContent.classList.remove('hidden'); };
+        el.modalConnect.onclick = connectToColab;
+        el.newChatBtn.onclick = () => { const newChat = createNewChat(); selectChat(newChat.id); };
+        el.searchInput.oninput = e => renderChatList(e.target.value);
+        el.chatList.onclick = e => { const id = e.target.closest('.sidebar-item')?.dataset.chatId; if(id) selectChat(parseInt(id)); };
+        
+        el.chatList.oncontextmenu = e => {
+            e.preventDefault();
+            const target = e.target.closest('.sidebar-item');
+            if (!target) return;
+            state.contextMenuChatId = parseInt(target.dataset.chatId);
+            el.contextMenu.style.top = `${e.clientY}px`;
+            el.contextMenu.style.left = `${e.clientX}px`;
+            el.contextMenu.style.display = 'block';
+        };
+
+        el.renameChatBtn.onclick = () => {
+            const chatToRename = state.chats.find(c => c.id === state.contextMenuChatId);
+            const newName = prompt('Enter new chat name:', chatToRename.name);
+            if (newName) { chatToRename.name = newName; saveChats(); renderChatList(); if (chatToRename.id === state.activeChatId) el.chatTitle.textContent = newName; }
+            el.contextMenu.style.display = 'none';
+        };
+
+        el.deleteChatBtn.onclick = () => {
+            if (confirm('Are you sure you want to delete this chat?')) {
+                state.chats = state.chats.filter(c => c.id !== state.contextMenuChatId);
+                saveChats();
+                if (state.activeChatId === state.contextMenuChatId) { selectChat(null); }
+                renderChatList();
+            }
+            el.contextMenu.style.display = 'none';
+        };
+        
+        el.clearHistoryBtn.onclick = () => {
+            if (!state.activeChatId) return;
+            if (confirm('Are you sure you want to clear the history for this chat? This cannot be undone.')) {
+                const chat = state.chats.find(c => c.id === state.activeChatId);
+                if (chat) { chat.history = []; saveChats(); selectChat(state.activeChatId); }
+            }
+        };
+
+        document.addEventListener('click', () => { if (el.contextMenu.style.display === 'block') el.contextMenu.style.display = 'none'; });
+
+        el.systemPromptInput.oninput = () => {
+            const chat = state.chats.find(c => c.id === state.activeChatId);
+            if(chat) { chat.system_prompt = el.systemPromptInput.value; chat.persona = 'custom'; el.personaSelect.value = 'custom'; saveChats(); }
+        };
+        
+        el.personaSelect.onchange = () => {
+            const personaKey = el.personaSelect.value;
+            const chat = state.chats.find(c => c.id === state.activeChatId);
+            if(chat && personaKey !== 'custom') { chat.persona = personaKey; chat.system_prompt = PERSONAS[personaKey].prompt; el.systemPromptInput.value = chat.system_prompt; saveChats(); }
+        };
+
+        el.toggleLeftSidebar.onclick = () => { el.leftSidebar.classList.toggle('w-72'); el.leftSidebar.classList.toggle('w-0'); el.leftSidebar.classList.toggle('p-4'); el.leftSidebar.classList.toggle('p-0'); };
+        el.toggleRightSidebar.onclick = () => { el.rightSidebar.classList.toggle('hidden'); };
+    }
+    
+    init();
+});
+</script>
+</body>
+</html>
