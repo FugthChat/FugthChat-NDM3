@@ -45,15 +45,16 @@
             font-family: 'Inter', sans-serif; 
             background-color: var(--bg-main); 
             color: var(--text-primary);
+            overflow: hidden;
         }
         .prose { color: var(--text-primary); }
         .prose code:not(pre *) { background-color: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; font-family: 'Space Grotesk', monospace; }
         html[data-theme="dark"] .prose code:not(pre *) { background-color: rgba(255,255,255,0.1); }
-        .prose pre { background-color: #282c34; padding: 1rem; border-radius: 0.5rem; }
+        .prose pre { background-color: #282c34; padding: 1rem; border-radius: 0.5rem; color: #abb2bf; }
         .blinking-cursor { animation: blink 1s step-end infinite; }
         @keyframes blink { 50% { color: var(--accent); } }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-sidebar); }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #666; }
         
@@ -338,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.personaSelect.value = chat.persona || 'custom';
             el.chatHistory.innerHTML = '';
             el.welcomeMessage.classList.toggle('hidden', chat.history.length > 0);
-            chat.history.forEach((m, i) => addMessage(m.role, m.text, m, false));
+            chat.history.forEach((m, i) => addMessage(m.role, m.text, { ...m, index: i }, false));
             scrollToBottom();
         }
     }
@@ -407,13 +408,58 @@ document.addEventListener('DOMContentLoaded', () => {
         return messageContainer;
     }
 
-    function buildPrompt() { /* Unchanged */ }
+    function buildPrompt() {
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (!activeChat) return "";
+        let tokenCount = 0;
+        const messagesForPrompt = [];
+        const countTokens = (str) => Math.ceil(str.length / 4);
+        const systemPrompt = `<|system|>\n${activeChat.system_prompt}</s>\n`;
+        tokenCount += countTokens(systemPrompt);
+        const reversedHistory = [...activeChat.history].reverse();
+        for (const msg of reversedHistory) {
+            const formattedMsg = msg.role === 'user' ? `<|user|>\n${msg.text}</s>\n` : `<|assistant|>\n${msg.text}</s>\n`;
+            const msgTokenCount = countTokens(formattedMsg);
+            if (tokenCount + msgTokenCount < MAX_CONTEXT_TOKENS) {
+                messagesForPrompt.unshift(formattedMsg);
+                tokenCount += msgTokenCount;
+            } else {
+                break; 
+            }
+        }
+        return systemPrompt + messagesForPrompt.join('') + `<|assistant|>\n`;
+    }
     
     function scrollToBottom() { el.chatHistory.scrollTop = el.chatHistory.scrollHeight; }
 
-    async function checkServerStatus() { /* Unchanged */ }
+    async function checkServerStatus() {
+        updateStatus('connecting', 'Connecting to AI Server...');
+        try {
+            const response = await fetch(HUGGING_FACE_URL, { method: 'GET' });
+            if (response.ok) {
+                updateStatus('connected', 'AI Server Online');
+                el.promptInput.disabled = false;
+                el.sendBtn.disabled = false;
+            } else {
+                 throw new Error(`Server sleeping or offline`);
+            }
+        } catch (error) {
+            updateStatus('failed', `Connection Failed. Server may be starting. Please wait...`);
+            setTimeout(checkServerStatus, 15000);
+        }
+    }
     
-    function setGenerating(on) { /* Unchanged */ }
+    function setGenerating(on) {
+        state.isGenerating = on;
+        el.promptInput.disabled = on;
+        el.sendBtn.innerHTML = on ? '<i class="fa-solid fa-stop"></i>' : '<i class="fa-solid fa-arrow-up text-[var(--text-secondary)]"></i>';
+        el.sendBtn.disabled = false; // Always enabled to allow aborting
+        if (on) {
+            updateStatus('generating', 'Assistant is thinking...');
+        } else {
+            updateStatus('connected', 'AI Server Online');
+        }
+    }
     
     async function getAiResponse() {
         setGenerating(true);
@@ -437,13 +483,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.isGenerating) {
                 const duration = Date.now() - startTime;
                 await typeWriter(assistantMessageElement, data.response);
-                
                 const activeChat = state.chats.find(c => c.id === state.activeChatId);
                 if(activeChat) {
                     const newMessage = { role: 'assistant', text: data.response, duration: duration, feedback: null };
                     activeChat.history.push(newMessage);
                     saveChats();
-                    selectChat(state.activeChatId); // Re-render to show action buttons
+                    selectChat(state.activeChatId); 
                 }
             }
         } catch (e) {
@@ -457,9 +502,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function autoResizeTextarea() { /* Unchanged */ }
+    function autoResizeTextarea() {
+        el.promptInput.style.height = 'auto';
+        const newHeight = Math.min(el.promptInput.scrollHeight, 200);
+        el.promptInput.style.height = `${newHeight}px`;
+    }
     
-    function updateStatus(status, text) { /* Unchanged */ }
+    function updateStatus(status, text) {
+        const statusMap = {
+            connecting: { color: 'bg-yellow-500', pulse: true },
+            connected: { color: 'bg-green-500', pulse: false },
+            generating: { color: 'bg-blue-500', pulse: true },
+            failed: { color: 'bg-red-500', pulse: false }
+        };
+        const newStatus = statusMap[status];
+        el.statusText.textContent = text;
+        el.statusDot.className = `w-2 h-2 rounded-full ${newStatus.color}`;
+        newStatus.pulse ? el.statusDot.classList.add('animate-pulse') : el.statusDot.classList.remove('animate-pulse');
+    }
 
     async function handleSend() {
         if (window.innerWidth < 768 && el.leftSidebar.classList.contains('open')) {
@@ -485,11 +545,39 @@ document.addEventListener('DOMContentLoaded', () => {
         getAiResponse();
     }
     
-    function handleFileUpload(event) { /* Unchanged */ }
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileContent = e.target.result;
+            const currentPrompt = el.promptInput.value;
+            el.promptInput.value = `CONTEXT FROM FILE: ${file.name}\n\n${fileContent}\n\n---\n\n${currentPrompt}`;
+            autoResizeTextarea();
+            el.promptInput.focus();
+        };
+        reader.readAsText(file);
+    }
 
-    function toggleChatOptionsMenu(chatId, buttonEl) { /* Unchanged */ }
+    function toggleChatOptionsMenu(chatId, buttonEl) {
+        closeAllMenus();
+        state.activeMenuChatId = chatId;
+        const menu = document.createElement('div');
+        menu.className = 'chat-options-menu';
+        const rect = buttonEl.getBoundingClientRect();
+        const chat = state.chats.find(c => c.id === chatId);
+        const pinText = chat.pinned ? 'Unpin' : 'Pin';
+        const pinIcon = chat.pinned ? 'fa-thumbtack' : 'fa-thumbtack';
+        menu.innerHTML = `<button data-action="pin" class="w-full text-left px-3 py-1.5 hover:bg-black/5 dark:hover:bg-white/10 flex items-center"><i class="fa-solid ${pinIcon} fa-fw mr-2 w-4"></i>${pinText}</button><button data-action="rename" class="w-full text-left px-3 py-1.5 hover:bg-black/5 dark:hover:bg-white/10 flex items-center"><i class="fa-solid fa-pen-to-square fa-fw mr-2 w-4"></i>Rename</button><button data-action="share" class="w-full text-left px-3 py-1.5 hover:bg-black/5 dark:hover:bg-white/10 flex items-center"><i class="fa-solid fa-share-nodes fa-fw mr-2 w-4"></i>Share</button><div class="h-px bg-[var(--border-color)] my-1"></div><button data-action="delete" class="w-full text-left px-3 py-1.5 hover:bg-black/5 dark:hover:bg-white/10 text-red-400 flex items-center"><i class="fa-solid fa-trash-can fa-fw mr-2 w-4"></i>Delete</button>`;
+        menu.style.left = `${rect.left - 150}px`;
+        menu.style.top = `${rect.bottom + 5}px`;
+        document.body.appendChild(menu);
+    }
 
-    function closeAllMenus() { /* Unchanged */ }
+    function closeAllMenus() {
+        document.querySelectorAll('.chat-options-menu').forEach(m => m.remove());
+        state.activeMenuChatId = null;
+    }
 
     function addEventListeners() {
         el.sendBtn.onclick = () => {
@@ -511,10 +599,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'regenerate') {
                 const chat = state.chats.find(c => c.id === state.activeChatId);
                 if (chat) {
-                    chat.history = chat.history.slice(0, index); // Trim history to before this message
+                    chat.history.pop(); // Remove the last assistant message
                     saveChats();
-                    selectChat(state.activeChatId); // Re-render chat
-                    getAiResponse(); // Get new response
+                    selectChat(state.activeChatId);
+                    getAiResponse();
                 }
             } else if (action === 'like' || action === 'dislike') {
                 const chat = state.chats.find(c => c.id === state.activeChatId);
@@ -522,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const message = chat.history[index];
                     message.feedback = message.feedback === action ? null : action;
                     saveChats();
-                    selectChat(state.activeChatId); // Re-render to show updated feedback state
+                    selectChat(state.activeChatId);
                 }
             }
         });
@@ -608,16 +696,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         el.quickPromptsBtn.onclick = () => el.quickPromptsModal.classList.remove('hidden');
         el.modalCloseX.onclick = () => el.quickPromptsModal.classList.add('hidden');
-        el.quickPromptsModal.onclick = (e) => { if (e.target === el.quickPromptsModal) el.quickPromptsModal.classList.add('hidden'); };
+        el.quickPromptsModal.onclick = (e) => { if (e.target.id === 'quick-prompts-modal') el.quickPromptsModal.classList.add('hidden'); };
 
         el.importChatsBtn.onclick = () => el.importChatsInput.click();
-        el.importChatsInput.onchange = (e) => { /* unchanged */ };
-        el.exportChatsBtn.onclick = () => { /* unchanged */ };
-        el.helpBtn.onclick = () => { /* unchanged */ };
+        el.importChatsInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedChats = JSON.parse(event.target.result);
+                    if (Array.isArray(importedChats)) {
+                        state.chats = [...importedChats, ...state.chats];
+                        saveChats(); renderChatList(); alert('Chats imported successfully!');
+                    } else { throw new Error('Invalid format'); }
+                } catch (err) { alert('Failed to import chats. Please check the file format.'); }
+            };
+            reader.readAsText(file);
+        };
+
+        el.exportChatsBtn.onclick = () => {
+            if (state.chats.length === 0) return alert('No chats to export.');
+            const blob = new Blob([JSON.stringify(state.chats, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fugthai_chats_${new Date().toISOString()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        
+        el.helpBtn.onclick = () => alert('FugthAI Help\n\n- Use the dropdown to switch between Lite (fast) and High (detailed) modes.\n- Manage chats with the three-dot menu.\n- Customize AI behavior in the right sidebar.\n- All chats are saved locally in your browser.');
     }
     
     init();
 });
 </script>
 </body>
-</html>
+</ht
