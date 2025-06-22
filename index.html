@@ -25,8 +25,8 @@
       body { font-family: 'Inter', sans-serif; background:var(--bg0); color:var(--fg0); }
       .sidebar { transition: width 0.3s ease-in-out; }
       .sidebar-item:hover, .sidebar-item.active { background:var(--bg2); }
-      .copy-btn { opacity:0; transition:opacity .15s ease-in-out; }
-      .message-container:hover .copy-btn { opacity:1; }
+      .action-btn { opacity:0; transition:opacity .15s ease-in-out; }
+      .message-container:hover .action-btn { opacity:1; }
       #context-menu { position: absolute; z-index: 100; background-color: var(--bg1); border: 1px solid var(--bg2); border-radius: 8px; box-shadow: var(--shadow); padding: 8px; display: none; }
       #context-menu button { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 4px; background: none; border: none; color: var(--fg0); cursor: pointer; }
       #context-menu button:hover { background-color: var(--bg2); }
@@ -37,6 +37,8 @@
       .prose pre { background-color: #232731; padding: 1rem; border-radius: 0.5rem; color: #d8dee9; font-size: 0.875rem; }
       .prose code { font-family: 'Courier New', Courier, monospace; background-color: var(--bg2); padding: 2px 4px; border-radius: 4px; }
       .prose pre code { background-color: transparent; padding: 0; border-radius: 0; }
+      .feedback-btn.liked { color: var(--accent); }
+      .feedback-btn.disliked { color: var(--danger); }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -102,6 +104,13 @@
   
   <aside id="right-sidebar" class="sidebar lg:w-80 bg-[var(--bg1)] p-4 flex-col border-l border-[var(--bg2)] flex-shrink-0 space-y-4 overflow-y-auto hidden lg:flex">
       <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
+          <h3 class="font-bold text-[var(--accent)] mb-2">Model</h3>
+          <select id="model-select" class="w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]">
+              <option value="Fugth-1.4NDM-Lite">Fugth-1.4NDM-Lite</option>
+              <option value="Fugth-1.3NDM-HIGH">Fugth-1.3NDM-HIGH</option>
+          </select>
+      </div>
+      <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
           <h3 class="font-bold text-[var(--accent)] mb-2">Persona</h3>
           <select id="persona-select" class="w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"></select>
       </div>
@@ -129,12 +138,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     const $ = sel => document.querySelector(sel);
 
-    // --- 1. SETTINGS ---
-    // This is the permanent URL for your AI Brain on Hugging Face.
     const HUGGING_FACE_URL = 'https://fugthchat-fugth-chat-ndm3-brain.hf.space';
 
     const PERSONAS = {
-        default: { name: 'Default Assistant', prompt: 'You are a helpful, friendly, and versatile AI assistant named FugthAI. You can answer questions, provide explanations, and assist with a wide range of tasks.' },
+        default: { name: 'Default Assistant', prompt: 'You are a helpful, friendly, and versatile AI assistant named FugthAI. You provide clear, concise, and direct answers.' },
         lawyer: { name: 'Lawyer', prompt: 'You are an AI Legal Advisor. Your role is to provide information on legal topics, explain legal concepts, and help draft documents. You are strictly forbidden from providing medical, financial, or any other type of advice outside the legal domain. If a user asks for non-legal advice, you MUST refuse and state clearly: "My expertise is strictly limited to legal matters. I cannot provide advice on that topic."' },
         dentist: { name: 'Dentist', prompt: 'You are an AI Dental Advisor. Your purpose is to provide information about dental health, oral hygiene, and common dental procedures. You are not a substitute for a real medical professional. You are strictly forbidden from providing advice on any topic outside of dentistry and general oral health. If asked a non-dental question, you MUST refuse and state clearly: "I can only provide information about dental health. For other topics, please consult an appropriate expert."' },
         sales: { name: 'Sales Expert', prompt: 'You are a master AI Sales Expert. Your goal is to provide users with world-class sales strategies, pitch advice, negotiation tactics, and motivational coaching. You must remain in the persona of a confident, persuasive, and highly knowledgeable sales leader. You are strictly forbidden from engaging in topics outside of sales, marketing, and business development. If asked to, you MUST refuse and pivot back, stating: "That\'s outside my area of expertise, which is sales. Let\'s focus on how we can crush your sales goals."' }
@@ -150,11 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     let state = {
-        chats: JSON.parse(localStorage.getItem('fugthai_chats_v9') || '[]'),
+        chats: JSON.parse(localStorage.getItem('fugthai_chats_v11') || '[]'),
         activeChatId: null,
         isGenerating: false,
         abortController: null,
-        theme: localStorage.getItem('fugthai_theme_v9') || 'dark'
+        theme: localStorage.getItem('fugthai_theme_v11') || 'dark',
+        generationTimer: null
     };
 
     const el = {
@@ -169,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         importChatsBtn: $('#import-chats-btn'), importChatsInput: $('#import-chats-input'),
         helpBtn: $('#help-btn'), clearHistoryBtn: $('#clear-history-btn'), personaSelect: $('#persona-select'),
         quickPromptsBtn: $('#quick-prompts-btn'), quickPromptsModal: $('#quick-prompts-modal'),
-        quickPromptsList: $('#quick-prompts-list'), modalCloseX: $('#modal-close-x')
+        quickPromptsList: $('#quick-prompts-list'), modalCloseX: $('#modal-close-x'), modelSelect: $('#model-select')
     };
     
     function init() {
@@ -197,14 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         addEventListeners();
         autoResizeTextarea();
-        checkServerStatus(); // Attempt to connect to the server on startup
+        checkServerStatus();
     }
 
-    function saveChats() { localStorage.setItem('fugthai_chats_v9', JSON.stringify(state.chats)); }
+    function saveChats() { localStorage.setItem('fugthai_chats_v11', JSON.stringify(state.chats)); }
     
     function createNewChat() {
         const defaultPersona = 'default';
-        const c = { id: Date.now(), name: 'New Chat', history: [], persona: defaultPersona, system_prompt: PERSONAS[defaultPersona].prompt };
+        const c = { id: Date.now(), name: 'New Chat', history: [], persona: defaultPersona, system_prompt: PERSONAS[defaultPersona].prompt, model: 'Fugth-1.4NDM-Lite' };
         state.chats.unshift(c);
         saveChats();
         return c;
@@ -212,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyTheme() {
         document.documentElement.setAttribute('data-theme', state.theme);
-        localStorage.setItem('fugthai_theme_v9', state.theme);
+        localStorage.setItem('fugthai_theme_v11', state.theme);
         el.themeBtn.innerHTML = state.theme === 'dark' ? '☀️' : '🌙';
     }
 
@@ -240,13 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
             el.chatTitle.textContent = chat.name;
             el.systemPromptInput.value = chat.system_prompt;
             el.personaSelect.value = chat.persona || 'custom';
+            el.modelSelect.value = chat.model || 'Fugth-1.4NDM-Lite';
             el.chatHistory.innerHTML = '';
-            chat.history.forEach((m, index) => addMessage(m.role, m.text, m.isError, false));
+            chat.history.forEach((m, index) => addMessage(m.role, m.text, { ...m, index }, false));
             scrollToBottom();
         }
     }
     
-    function addMessage(role, text, isError = false, save = true) {
+    function addMessage(role, text, options = {}, save = true) {
+        const { isError = false, feedback = null, index = -1, duration = null } = options;
         const activeChat = state.chats.find(c => c.id === state.activeChatId);
         if (!activeChat) return;
 
@@ -269,8 +279,45 @@ document.addEventListener('DOMContentLoaded', () => {
         
         textContentDiv.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
         
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'flex justify-between items-center mb-2';
+        headerDiv.innerHTML = `<strong class="text-sm text-[var(--fg0)]">${who}</strong>`;
+
+        if (role === 'assistant' && duration) {
+            const timerDiv = document.createElement('span');
+            timerDiv.className = 'text-xs text-[var(--fg1)]';
+            timerDiv.innerHTML = `<i class="fa-regular fa-clock fa-fw mr-1"></i>${(duration / 1000).toFixed(2)}s`;
+            headerDiv.appendChild(timerDiv);
+        }
+
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'absolute top-2 right-2 flex items-center space-x-1';
+
+        if (role === 'assistant' && !isError) {
+            const regenBtn = document.createElement('button');
+            regenBtn.className = 'action-btn p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all';
+            regenBtn.title = 'Regenerate';
+            regenBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
+            regenBtn.onclick = (e) => { e.stopPropagation(); handleRegenerate(index); };
+            actionsContainer.appendChild(regenBtn);
+
+            const likeBtn = document.createElement('button');
+            likeBtn.className = `action-btn feedback-btn p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all ${feedback === 'liked' ? 'liked' : ''}`;
+            likeBtn.title = 'Like';
+            likeBtn.innerHTML = '<i class="fa-regular fa-thumbs-up"></i>';
+            likeBtn.onclick = (e) => { e.stopPropagation(); handleFeedback(index, 'liked', likeBtn, dislikeBtn); };
+            actionsContainer.appendChild(likeBtn);
+            
+            const dislikeBtn = document.createElement('button');
+            dislikeBtn.className = `action-btn feedback-btn p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all ${feedback === 'disliked' ? 'disliked' : ''}`;
+            dislikeBtn.title = 'Dislike';
+            dislikeBtn.innerHTML = '<i class="fa-regular fa-thumbs-down"></i>';
+            dislikeBtn.onclick = (e) => { e.stopPropagation(); handleFeedback(index, 'disliked', likeBtn, dislikeBtn); };
+            actionsContainer.appendChild(dislikeBtn);
+        }
+
         const copyBtn = document.createElement('button');
-        copyBtn.className = 'copy-btn absolute top-2 right-2 p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all';
+        copyBtn.className = 'action-btn p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all';
         copyBtn.title = 'Copy';
         copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
         copyBtn.onclick = (e) => {
@@ -279,10 +326,11 @@ document.addEventListener('DOMContentLoaded', () => {
             copyBtn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>';
             setTimeout(() => { copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>'; }, 1500);
         };
+        actionsContainer.appendChild(copyBtn);
 
-        bubble.innerHTML = `<div class="flex justify-between items-center mb-2"><strong class="text-sm text-[var(--fg0)]">${who}</strong></div>`;
+        bubble.appendChild(headerDiv);
         bubble.appendChild(textContentDiv);
-        bubble.appendChild(copyBtn);
+        bubble.appendChild(actionsContainer);
         
         const bubbleOuter = bubble.outerHTML;
         messageInner.innerHTML = role === 'user' ? `<div class="flex-grow"></div>${bubbleOuter}${avatar}` : `${avatar}${bubbleOuter}<div class="flex-grow"></div>`;
@@ -292,16 +340,24 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToBottom();
 
         if (save && !isError) {
-            activeChat.history.push({ role, text });
+            const messageToSave = { role, text };
+            if (duration) messageToSave.duration = duration;
+            activeChat.history.push(messageToSave);
             saveChats();
         }
+    }
+    
+    function getCurrentDateTime() {
+        return new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
     function buildPrompt() {
         const activeChat = state.chats.find(c => c.id === state.activeChatId);
         if (!activeChat) return "";
 
-        let formattedPrompt = `<|system|>\n${activeChat.system_prompt}</s>\n`;
+        const enhancedSystemPrompt = `Current date and time: ${getCurrentDateTime()}.\n${activeChat.system_prompt}\n\nAlways provide a helpful and direct response to the user's latest message.`;
+
+        let formattedPrompt = `<|system|>\n${enhancedSystemPrompt}</s>\n`;
         activeChat.history.forEach(msg => {
             if (msg.role === 'user') {
                 formattedPrompt += `<|user|>\n${msg.text}</s>\n`;
@@ -318,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkServerStatus() {
         updateStatus('connecting', 'Connecting to AI Server...');
         try {
-            const response = await fetch(HUGGING_FACE_URL, { method: 'GET' });
+            const response = await fetch(HUGGING_FACE_URL, { method: 'GET', signal: AbortSignal.timeout(15000) });
             if (response.ok) {
                 const data = await response.json();
                 if (data.status === 'AI server is online') {
@@ -332,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  throw new Error(`Server sleeping or offline (Status: ${response.status})`);
             }
         } catch (error) {
-            updateStatus('failed', `Connection Failed. The server may be waking up. Please wait a minute and refresh.`);
+            updateStatus('failed', `Connection Failed. Server may be waking up. Refresh in a minute.`);
             console.error(error);
         }
     }
@@ -344,29 +400,42 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (on) {
             el.sendBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
-            updateStatus('generating', 'Assistant is thinking...');
+            let thinkingTime = 0;
+            updateStatus('generating', `Assistant is thinking... (0.0s)`);
+            state.generationTimer = setInterval(() => {
+                thinkingTime += 100;
+                el.statusText.textContent = `Assistant is thinking... (${(thinkingTime/1000).toFixed(1)}s)`;
+            }, 100);
         } else {
+            clearInterval(state.generationTimer);
             el.sendBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
             updateStatus('connected', 'AI Server Online');
         }
     }
     
     async function getAiResponse() {
+        const startTime = Date.now();
         setGenerating(true);
         state.abortController = new AbortController();
         const prompt = buildPrompt();
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        let duration = 0;
 
         try {
             const res = await fetch(`${HUGGING_FACE_URL}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt }),
+                body: JSON.stringify({ 
+                    prompt: prompt,
+                    model: activeChat.model
+                }),
                 signal: state.abortController.signal
             });
-            if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+            if (!res.ok) throw new Error(`Request failed: ${res.statusText} (${res.status})`);
             
             const data = await res.json();
-            return { success: true, response: data.response };
+            duration = Date.now() - startTime;
+            return { success: true, response: data.response, duration: duration };
 
         } catch (e) {
             if (e.name === 'AbortError') {
@@ -386,14 +455,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateStatus(status, text) {
         const statusMap = {
-            connecting: { text: 'Connecting to AI Server...', color: 'bg-yellow-500', pulse: true },
-            connected: { text: 'AI Server Online', color: 'bg-green-500', pulse: false },
-            generating: { text: 'Assistant is thinking...', color: 'bg-blue-500', pulse: true },
-            failed: { text, color: 'bg-[var(--danger)]', pulse: false }
+            connecting: { color: 'bg-yellow-500', pulse: true },
+            connected: { color: 'bg-green-500', pulse: false },
+            generating: { color: 'bg-blue-500', pulse: true },
+            failed: { color: 'bg-[var(--danger)]', pulse: false }
         };
         const newStatus = statusMap[status];
 
-        el.statusText.textContent = newStatus.text;
+        el.statusText.textContent = text;
         el.statusDot.className = `w-2 h-2 rounded-full ${newStatus.color}`;
         newStatus.pulse ? el.statusDot.classList.add('animate-pulse') : el.statusDot.classList.remove('animate-pulse');
     }
@@ -402,11 +471,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const promptText = el.promptInput.value.trim();
         if (!promptText || state.isGenerating) return;
 
-        addMessage('user', promptText, false, true);
+        addMessage('user', promptText, {}, true);
 
         const activeChat = state.chats.find(c => c.id === state.activeChatId);
-        if (activeChat.history.length === 1) { // It has only the user message
-            activeChat.name = promptText.split(' ').slice(0, 4).join(' ');
+        if (activeChat.history.filter(m => m.role === 'user').length === 1) {
+            activeChat.name = promptText.substring(0, 25).trim() + (promptText.length > 25 ? '...' : '');
             renderChatList();
             el.chatTitle.textContent = activeChat.name;
         }
@@ -416,10 +485,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const result = await getAiResponse();
         if (result.success) {
-            addMessage('assistant', result.response, false, true);
+            addMessage('assistant', result.response, { index: activeChat.history.length, duration: result.duration }, true);
         } else {
-            addMessage('assistant', result.response, true, false);
+            addMessage('assistant', result.response, { isError: true }, false);
         }
+    }
+    
+    async function handleRegenerate(messageIndex) {
+        if (state.isGenerating) return;
+        const chat = state.chats.find(c => c.id === state.activeChatId);
+        if (!chat) return;
+
+        chat.history = chat.history.slice(0, messageIndex);
+        saveChats();
+        selectChat(chat.id);
+
+        const result = await getAiResponse();
+        if (result.success) {
+            addMessage('assistant', result.response, { index: chat.history.length, duration: result.duration }, true);
+        } else {
+            addMessage('assistant', result.response, { isError: true }, false);
+        }
+    }
+    
+    function handleFeedback(messageIndex, feedback, likeBtn, dislikeBtn) {
+        const chat = state.chats.find(c => c.id === state.activeChatId);
+        if (!chat || !chat.history[messageIndex]) return;
+
+        const message = chat.history[messageIndex];
+        
+        if (message.feedback === feedback) {
+            message.feedback = null;
+            likeBtn.classList.remove('liked');
+            dislikeBtn.classList.remove('disliked');
+        } else {
+            message.feedback = feedback;
+            likeBtn.classList.toggle('liked', feedback === 'liked');
+            dislikeBtn.classList.toggle('disliked', feedback === 'disliked');
+        }
+        
+        saveChats();
     }
 
     function addEventListeners() {
@@ -505,10 +610,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        el.modelSelect.onchange = () => {
+            const chat = state.chats.find(c => c.id === state.activeChatId);
+            if(chat) {
+                chat.model = el.modelSelect.value;
+                saveChats();
+            }
+        };
+
         el.toggleLeftSidebar.onclick = () => { el.leftSidebar.classList.toggle('w-72'); el.leftSidebar.classList.toggle('w-0'); el.leftSidebar.classList.toggle('p-4'); el.leftSidebar.classList.toggle('p-0'); };
         el.toggleRightSidebar.onclick = () => { el.rightSidebar.classList.toggle('hidden'); };
 
-        // Modal Listeners
         el.quickPromptsBtn.onclick = () => el.quickPromptsModal.classList.remove('hidden');
         el.modalCloseX.onclick = () => el.quickPromptsModal.classList.add('hidden');
         el.quickPromptsModal.onclick = (e) => { if (e.target === el.quickPromptsModal) el.quickPromptsModal.classList.add('hidden'); };
