@@ -1,675 +1,521 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fugth Chat LLC - AI Chatbots & Website Solutions</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    /* ─────────────────────────────────────────────────────────────────────────
-        MAIN SITE: UI OVERHAUL & MODERN MONOCHROMATIC BASE
-    ───────────────────────────────────────────────────────────────────────── */
-    :root {
-      --color-background: #ffffff;
-      --color-text: #1a1a1a;
-      --color-primary: #000000;
-      --color-secondary-text: #666666;
-      --color-border: #e5e5e5;
-      --color-accent: #fafafa;
-    }
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    html {
-      scroll-behavior: smooth;
-      font-size: 16px;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-      line-height: 1.7;
-      color: var(--color-text);
-      background-color: var(--color-background);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    a {
-      color: var(--color-primary);
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-border);
-      transition: color 0.2s ease, border-bottom-color 0.2s ease;
-    }
-    a:hover {
-      color: var(--color-secondary-text);
-      border-bottom-color: var(--color-secondary-text);
-    }
-    h1, h2, h3, h4 {
-      font-weight: 700;
-      color: var(--color-primary);
-      line-height: 1.2;
-      margin-bottom: 1rem;
-    }
-    h2 { font-size: 2.25rem; }
-    h3 { font-size: 1.5rem; }
-    p {
-      margin-bottom: 1.5rem;
-      max-width: 65ch;
-    }
-    ul { list-style: none; }
-    button {
-      font: inherit;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: var(--color-primary);
-    }
-
-    /* MAIN SITE: ANNOUNCEMENT BAR */
-    .announcement-bar {
-        background-color: var(--color-primary);
-        color: var(--color-background);
-        text-align: center;
-        padding: 0.75rem 2rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-        position: relative;
-    }
-    .announcement-bar a {
-        color: var(--color-background);
-        font-weight: 700;
-        border-bottom-color: #777;
-    }
-    .announcement-bar a:hover {
-        color: #ccc;
-        border-bottom-color: #ccc;
-    }
-    .announcement-close-btn {
-        position: absolute;
-        top: 50%;
-        right: 1.5rem;
-        transform: translateY(-50%);
-        color: var(--color-background);
-        font-size: 1.5rem;
-        opacity: 0.7;
-        transition: opacity 0.2s ease;
-    }
-    .announcement-close-btn:hover { opacity: 1; }
-
-    /* MAIN SITE: HEADER & TAB NAVIGATION */
-    header {
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--color-border);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      transition: top 0.3s ease;
-    }
-    .header-inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2%;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-    .logo {
-      font-size: 1.75rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      flex-shrink: 0;
-    }
-    .tab-nav {
-      display: flex;
-      gap: 0.5rem;
-      background-color: var(--color-accent);
-      border-radius: 8px;
-      padding: 0.25rem;
-    }
-    .tab-btn {
-      padding: 0.6rem 1.2rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      border-radius: 6px;
-      transition: all 0.25s ease-in-out;
-      white-space: nowrap;
-      border-bottom: none !important; /* Override for nav buttons */
-    }
-    .tab-btn.active {
-      background-color: var(--color-background);
-      color: var(--color-primary);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .tab-btn:not(.active):hover {
-      background-color: #e9e9e9;
-      color: var(--color-text);
-    }
-    a.tab-btn {
-      display: inline-block;
-    }
-    a.tab-btn:hover {
-      color: var(--color-primary);
-    }
-
-    /* MAIN SITE: SECTION & CONTENT STYLES */
-    section { display: none; }
-    section.active {
-      display: block;
-      animation: fadeInSection 0.5s ease-out;
-    }
-    @keyframes fadeInSection {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .container {
-      width: 90%;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 4rem 0;
-      flex: 1;
-    }
-    section h2 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    .section-intro {
-      max-width: 700px;
-      margin: 0 auto 3rem auto;
-      text-align: center;
-      font-size: 1.1rem;
-      color: var(--color-secondary-text);
-    }
-    .grid-2, .grid-3 {
-      display: grid;
-      gap: 2rem;
-    }
-    .grid-2 {
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    }
-    .grid-3 {
-       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-    .text-center { text-align: center; }
-
-    /* MAIN SITE: CARD DESIGN */
-    .card {
-      border: 1px solid var(--color-border);
-      border-radius: 8px;
-      padding: 2rem;
-      background: var(--color-background);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      display: flex;
-      flex-direction: column;
-    }
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    }
-    .card h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .card .icon { font-size: 1.5rem; }
-    .card p {
-      font-size: 0.95rem;
-      color: var(--color-secondary-text);
-      line-height: 1.6;
-      margin-bottom: 0;
-    }
-    .card ul {
-        list-style-position: inside;
-        list-style-type: '✓ ';
-        margin-top: 1rem;
-        padding-left: 0.25rem;
-        color: var(--color-secondary-text);
-        font-size: 0.95rem;
-    }
-    .card ul li {
-        margin-bottom: 0.5rem;
-        padding-left: 0.5rem;
-    }
-     .tag { 
-        display: inline-block;
-        background: var(--color-accent);
-        color: var(--color-secondary-text);
-        padding: .2rem .7rem;
-        border-radius: 8px;
-        font-size: .8rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
-        align-self: flex-start;
-     }
-
-    /* MAIN SITE: CTA & FOOTER */
-    .cta-section {
-      text-align: center;
-      margin-top: 4rem;
-      padding: 3rem 1.5rem;
-      background-color: var(--color-accent);
-      border-radius: 8px;
-    }
-    .cta-section p {
-      font-size: 1.05rem;
-      color: var(--color-secondary-text);
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .cta-button {
-        display: inline-block;
-        background-color: var(--color-primary);
-        color: var(--color-background);
-        padding: 0.9rem 2rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        border: 1px solid var(--color-primary);
-        transition: all 0.2s ease-in-out;
-        margin: 0.5rem;
-        text-decoration: none;
-        border-radius: 4px;
-        border-bottom: 1px solid var(--color-primary);
-    }
-    .cta-button:hover {
-        background-color: #333;
-        color: var(--color-background);
-        border-color: #333;
-        transform: translateY(-2px);
-    }
-    .cta-button.outlined {
-        background-color: transparent;
-        color: var(--color-primary);
-        border: 1px solid var(--color-primary);
-    }
-    .cta-button.outlined:hover {
-        background-color: var(--color-primary);
-        color: var(--color-background);
-    }
-    .cta-container {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-    footer {
-      background: var(--color-accent);
-      color: var(--color-secondary-text);
-      padding: 2.5rem 0;
-      text-align: center;
-      margin-top: auto;
-      border-top: 1px solid var(--color-border);
-    }
-    footer a { color: var(--color-text); }
-    
-    /* PASSWORD MODAL STYLES */
-    .password-modal-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center;
-        align-items: center; z-index: 2000; opacity: 0; visibility: hidden;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    .password-modal-overlay.visible { opacity: 1; visibility: visible; }
-    .password-modal-content {
-        background-color: var(--color-background); padding: 2.5rem; border-radius: 8px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 400px;
-        text-align: center; transform: scale(0.95); transition: transform 0.3s ease;
-    }
-    .password-modal-overlay.visible .password-modal-content { transform: scale(1); }
-    .password-modal-content h3 { margin-top: 0; margin-bottom: 0.75rem; }
-    .password-modal-content p { margin-bottom: 1.5rem; color: var(--color-secondary-text); font-size: 0.95rem; }
-    #password-input {
-        width: 100%; padding: 0.8rem; border: 1px solid var(--color-border);
-        border-radius: 4px; font-size: 1rem; margin-bottom: 1rem;
-    }
-    #password-error {
-        color: #d93025; font-size: 0.85rem; margin-top: -0.5rem;
-        margin-bottom: 1rem; display: none;
-    }
-    .password-modal-buttons { display: flex; gap: 0.75rem; }
-    .password-modal-buttons button {
-        flex: 1; padding: 0.8rem; border-radius: 4px;
-        font-weight: 600; transition: background-color 0.2s;
-    }
-    #password-submit {
-        background-color: var(--color-primary); color: var(--color-background);
-        border: 1px solid var(--color-primary);
-    }
-    #password-submit:hover { background-color: #333; }
-    #password-cancel {
-        background-color: transparent; color: var(--color-secondary-text);
-        border: 1px solid var(--color-border);
-    }
-     #password-cancel:hover { background-color: var(--color-accent); }
-
-    /* MEDIA QUERIES & MOBILE OPTIMIZATIONS */
-    @media (max-width: 768px) {
-      h2 { font-size: 1.8rem; }
-      h3 { font-size: 1.3rem; }
-      .header-inner { 
-        flex-direction: column; 
-        gap: 1rem; 
-        padding-top: 1.5rem;
-        padding-bottom: 1.5rem;
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>FugthAI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/nord.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+      :root {
+        --bg0:#2E3440;--bg1:#3B4252;--bg2:#434C5E;--bg3:#4C566A;
+        --fg0:#ECEFF4;--fg1:#D8DEE9;--accent:#88C0D0;
+        --accent-hover:#8FBCBB;--accent-text:#2E3440;--danger:#BF616A;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       }
-      .grid-2, .grid-3 { grid-template-columns: 1fr; }
-
-      .tab-nav {
-        overflow-x: auto;
-        justify-content: flex-start;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+      html[data-theme="light"] {
+        --bg0:#fdf6e3;--bg1:#eee8d5;--bg2:#d8d1c1;--bg3:#c9c2b2;
+        --fg0:#586e75;--fg1:#657b83;--accent:#268bd2;
+        --accent-hover:#1a6d9f;--accent-text:#fdf6e3;--danger:#dc322f;
       }
-      .tab-nav::-webkit-scrollbar {
-        display: none;
-      }
-    }
-  </style>
+      body { font-family: 'Inter', sans-serif; background:var(--bg0); color:var(--fg0); }
+      .sidebar { transition: width 0.3s ease-in-out; }
+      .sidebar-item:hover, .sidebar-item.active { background:var(--bg2); }
+      .copy-btn { opacity:0; transition:opacity .15s ease-in-out; }
+      .message-container:hover .copy-btn { opacity:1; }
+      #context-menu { position: absolute; z-index: 100; background-color: var(--bg1); border: 1px solid var(--bg2); border-radius: 8px; box-shadow: var(--shadow); padding: 8px; display: none; }
+      #context-menu button { display: block; width: 100%; text-align: left; padding: 8px 12px; border-radius: 4px; background: none; border: none; color: var(--fg0); cursor: pointer; }
+      #context-menu button:hover { background-color: var(--bg2); }
+      .prose { color: var(--fg0); }
+      .prose h1, .prose h2, .prose h3, .prose h4, .prose strong { color: var(--fg0); }
+      .prose a { color: var(--accent); }
+      .prose blockquote { border-left-color: var(--accent); }
+      .prose pre { background-color: #232731; padding: 1rem; border-radius: 0.5rem; color: #d8dee9; font-size: 0.875rem; }
+      .prose code { font-family: 'Courier New', Courier, monospace; background-color: var(--bg2); padding: 2px 4px; border-radius: 4px; }
+      .prose pre code { background-color: transparent; padding: 0; border-radius: 0; }
+    </style>
 </head>
-<body>
-  <div class="announcement-bar">
-    Help us build the future of private AI for local businesses.
-    <a href="https://givebutter.com/2jzj4p" class="announcement-link" target="_blank" rel="noopener noreferrer">Support on Givebutter &rarr;</a>
-    <button class="announcement-close-btn" aria-label="Dismiss announcement">&times;</button>
+<body class="flex h-screen overflow-hidden">
+
+  <aside id="left-sidebar" class="sidebar w-72 bg-[var(--bg1)] p-4 flex flex-col border-r border-[var(--bg2)] flex-shrink-0">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-xl font-bold">Fugth<span class="text-[var(--accent)]">AI</span></h1>
+      <button id="theme-btn" class="hover:bg-[var(--bg2)] p-2 rounded">🌙</button>
+    </div>
+    <div id="sidebar-content" class="flex flex-col flex-1 overflow-y-auto">
+        <button id="new-chat-btn" class="w-full py-2 rounded bg-[var(--bg2)] hover:bg-[#5E81AC] mb-4 transition-colors text-sm">
+          <i class="fa-solid fa-plus mr-2"></i>New Chat
+        </button>
+        <div class="flex items-center bg-[var(--bg0)] rounded p-2 mb-4">
+            <i class="fa-solid fa-search text-[var(--fg1)] mr-2"></i>
+            <input id="search-chats-input" class="bg-transparent flex-1 outline-none text-sm" placeholder="Search chats…"/>
+        </div>
+        <nav id="chat-list" class="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1"></nav>
+    </div>
+    <div class="pt-4 border-t border-[var(--bg2)] space-y-2 text-sm">
+      <button id="import-chats-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-file-import w-6"></i><span class="ml-2">Import Chats</span></button>
+      <input type="file" id="import-chats-input" class="hidden" accept=".json">
+      <button id="export-chats-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-file-export w-6"></i><span class="ml-2">Export All Chats</span></button>
+      <button id="help-btn" class="w-full flex items-center py-2 px-3 rounded hover:bg-[var(--bg2)] transition-colors"><i class="fa-solid fa-circle-question w-6"></i><span class="ml-2">Help</span></button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col min-w-0">
+    <header class="p-4 flex justify-between items-center border-b border-[var(--bg2)] flex-shrink-0">
+        <div class="flex items-center">
+            <button id="toggle-left-sidebar" class="p-2 rounded-md hover:bg-[var(--bg2)] mr-2">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <h2 id="chat-title" class="font-semibold truncate"></h2>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="clear-history-btn" class="p-2 rounded-md hover:bg-[var(--bg2)]" title="Clear chat history">
+                <i class="fa-solid fa-broom"></i>
+            </button>
+            <button id="toggle-right-sidebar" class="p-2 rounded-md hover:bg-[var(--bg2)] lg:hidden">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+    
+    <div id="chat-history" class="flex-1 p-6 space-y-6 overflow-y-auto"></div>
+    
+    <footer class="p-4 flex-shrink-0 bg-[var(--bg0)]">
+      <div id="status-bar" class="h-5 mb-2 flex items-center gap-2 text-xs">
+        <div id="status-dot" class="w-2 h-2 rounded-full"></div><span id="status-text"></span>
+      </div>
+      <div class="relative">
+        <button id="quick-prompts-btn" class="absolute bottom-3.5 left-3.5 w-10 h-10 rounded-full bg-[var(--bg2)] hover:bg-[var(--bg3)] text-[var(--fg0)] flex items-center justify-center transition-colors" title="Quick Prompts">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+        <textarea id="prompt-input" rows="1" class="w-full bg-[var(--bg2)] rounded-lg p-4 pl-16 pr-16 outline-none resize-none transition-all duration-200 focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50" placeholder="Ask anything…" disabled></textarea>
+        <button id="send-btn" class="absolute bottom-3.5 right-3.5 w-10 h-10 rounded-full bg-[var(--accent)] text-[var(--accent-text)] disabled:bg-[var(--bg2)] disabled:cursor-not-allowed flex items-center justify-center transition-colors" disabled>
+          <i class="fa-solid fa-arrow-up"></i>
+        </button>
+      </div>
+    </footer>
+  </main>
+  
+  <aside id="right-sidebar" class="sidebar lg:w-80 bg-[var(--bg1)] p-4 flex-col border-l border-[var(--bg2)] flex-shrink-0 space-y-4 overflow-y-auto hidden lg:flex">
+      <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
+          <h3 class="font-bold text-[var(--accent)] mb-2">Persona</h3>
+          <select id="persona-select" class="w-full bg-[var(--bg0)] border border-[var(--bg2)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"></select>
+      </div>
+      <div class="p-4 rounded-lg bg-[var(--bg1)] border border-[var(--bg2)]">
+          <h3 class="font-bold text-[var(--accent)] mb-2">System Prompt</h3>
+          <textarea id="system-prompt-input" rows="12" class="w-full bg-[var(--bg0)] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"></textarea>
+      </div>
+  </aside>
+
+  <div id="context-menu">
+      <button id="rename-chat"><i class="fa-solid fa-pen-to-square fa-fw mr-2"></i>Rename</button>
+      <button id="delete-chat"><i class="fa-solid fa-trash-can fa-fw mr-2 text-red-500"></i>Delete</button>
   </div>
-
-  <header>
-    <div class="header-inner">
-      <div class="logo">FUGTH CHAT</div>
-      <nav class="tab-nav">
-        <button class="tab-btn active" data-tab="customer">Our Solution</button>
-        <button class="tab-btn" data-tab="investor">Investment</button>
-        <button class="tab-btn" data-tab="high-roller">High-Roller</button>
-        <a href="chat.html" class="tab-btn">Fugth Chat</a>
-      </nav>
-    </div>
-  </header>
-
-  <section id="customer" class="active">
-    <div class="container">
-      <h2>AI Chatbots & Modern Websites for Your Business</h2>
-      <p class="section-intro">
-        We help local businesses thrive by integrating intelligent AI chatbots for 24/7 customer service and modernizing websites for a better user experience. Engage customers, automate inquiries, and grow your business with our affordable monthly plans.
-      </p>
-
-      <div class="grid-2">
-        <div class="card">
-          <h3><span class="icon">💬</span>AI Chatbot Integration</h3>
-          <p>Provide instant, 24/7 answers to your customers. Our AI chatbots can handle frequently asked questions, book appointments, and capture leads, freeing up your time.</p>
-        </div>
-        <div class="card">
-          <h3><span class="icon">✨</span>Website Modernization</h3>
-          <p>Is your website outdated? We'll update its design and functionality to be faster, more secure, and mobile-friendly, creating a professional online presence for your brand.</p>
-        </div>
-        <div class="card">
-          <h3><span class="icon">📈</span>Basic & Robust Tiers</h3>
-          <p>Choose a plan that fits your needs. Start with a basic inquiry chatbot or opt for a robust solution fully trained on your business's unique documents and data.</p>
-        </div>
-        <div class="card">
-          <h3><span class="icon">🤝</span>Local Business Focus</h3>
-          <p>We specialize in providing tailored solutions for local shops, clinics, and service providers. We understand your challenges and are here to help you succeed.</p>
-        </div>
-      </div>
-
-      <div class="cta-section">
-        <h3>Ready to Upgrade Your Business?</h3>
-        <p>Let's discuss how a modern website and an AI chatbot can transform your customer interactions. Schedule a free consultation today!</p>
-        <a href="https://forms.gle/5duTbE45AivDkTJR6" class="cta-button" target="_blank" rel="noopener noreferrer">Get a Free Quote</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="investor">
-    <div class="container">
-      <h2>Investing in the Future of Private AI</h2>
-      <p class="section-intro">
-        Fugth Chat is pioneering secure, offline AI solutions. Our core product, the 'FugthLite AI Maker,' enables the creation of on-premises chatbots that address critical data privacy and operational autonomy needs.
-      </p>
-      
-      <div class="grid-2" style="margin-bottom: 3rem;">
-          <div class="card">
-              <h3>Current Stage: Seed</h3>
-              <p>We have successfully developed our Minimum Viable Product (MVP) and are ready to finalize the platform for early adopters. Initial market validation shows significant demand.</p>
-          </div>
-          <div class="card">
-              <h3>The Market Opportunity</h3>
-              <p>The need for AI that prioritizes data security is accelerating. Fugth Chat is positioned to lead this market by giving businesses full control over their AI and data.</p>
-          </div>
-      </div>
-
-      <h3 class="text-center">Seed Funding: Building the Foundation</h3>
-      <p class="text-center" style="max-width: 700px; margin-left: auto; margin-right: auto;">
-        We are seeking <strong>Seed Funding</strong> to finalize our product and accelerate market entry. Your support will be allocated to essential hardware and foundational engineering talent.
-      </p>
-      
-      <div class="card text-center" style="margin-top: 4rem; background-color: var(--color-accent);">
-          <h3 style="justify-content: center;">A Special Thanks to Our Founding Backers</h3>
-          <p style="font-size: 1.1rem; color: var(--color-secondary-text); margin: 0.5rem auto 0 auto; max-width: none;">
-              We are incredibly grateful for the foundational support from our official backers. Their belief in our mission is helping build the future of private AI.
-          </p>
-          <ul class="backer-list" style="list-style: none; padding: 0; margin-top: 1.5rem; font-size: 1.2rem; font-weight: 600; color: var(--color-text);">
-              <li style="margin-bottom: 0.5rem;">Chase Lennox</li>
-          </ul>
-      </div>
-
-      <div class="cta-section">
-        <h3>Support Our Mission</h3>
-        <p>Your contribution, whether through community support or formal investment, is vital to our success. We are deeply grateful for every supporter who believes in the future of private, secure AI.</p>
-        <div class="cta-container">
-            <a href="https://www.kickstarter.com/projects/fugthchat/fugth-chat-llcs-secure-offline-ai-pilot?ref=profile_created&category_id=51" class="cta-button" target="_blank" rel="noopener noreferrer">Back us on Kickstarter</a>
-            <a href="https://gofund.me/31816e93" class="cta-button outlined" target="_blank" rel="noopener noreferrer">Support on GoFundMe</a>
-            <a href="https://givebutter.com/2jzj4p" class="cta-button outlined" target="_blank" rel="noopener noreferrer">Contribute on Givebutter</a>
-            <a href="https://forms.gle/6jGWFGkL85Zai3R69" class="cta-button outlined" target="_blank" rel="noopener noreferrer">Discuss Formal Investment</a>
-        </div>
-      </div>
-    </div>
-  </section>
   
-  <section id="high-roller">
-    <div class="container">
-        <h2>High-Roller Backers</h2>
-        <p class="section-intro">
-            Join a select circle accelerating offline, privacy-first AI. Large pledges let us jump to multi-site pilots, pay for full compliance audits, and prototype next-gen features like an offline voice module months sooner.
-        </p>
-
-        <h3 class="text-center" style="margin-bottom: 2rem;">Why High-Roller Support Matters</h3>
-        <div class="grid-3" style="margin-bottom: 4rem;">
-            <div class="card">
-                <span class="tag">Impact 01</span>
-                <h3 style="font-size: 1.2rem;">Double the pilot sites</h3>
-                <p>From two locations to four (clinic, pharmacy, dentist, retail) for richer, real-world data.</p>
-            </div>
-            <div class="card">
-                <span class="tag">Impact 02</span>
-                <h3 style="font-size: 1.2rem;">Full compliance audits</h3>
-                <p>Cover HIPAA & PCI-DSS audits so businesses can deploy Fugth Chat day-one with confidence.</p>
-            </div>
-            <div class="card">
-                <span class="tag">Impact 03</span>
-                <h3 style="font-size: 1.2rem;">Voice control R&D</h3>
-                <p>Fast-track an offline Whisper-lite engine so users can talk hands-free—even without Wi-Fi.</p>
-            </div>
-        </div>
-
-        <h3 class="text-center" style="margin-bottom: 2rem;">Investor-Level Perks</h3>
-        <div class="grid-2">
-            <div class="card">
-                <h3>$2.5k — Silver Sponsor</h3>
-                <ul>
-                    <li>2× pre-installed Fugth Chat Boxes (U.S. shipping)</li>
-                    <li>Logo on splash screen</li>
-                    <li>Invite to dev Slack for feature voting</li>
-                </ul>
-            </div>
-            <div class="card">
-                <h3>$5k — Gold Partner</h3>
-                <ul>
-                    <li>All Silver perks</li>
-                    <li>On-site install & training (US east coast) or remote worldwide</li>
-                    <li>Lifetime enterprise license (unlimited seats)</li>
-                </ul>
-            </div>
-             <div class="card">
-                <h3>$10k — Platinum Pilot Patron</h3>
-                <ul>
-                    <li>All Gold perks</li>
-                    <li>Custom hardware branding (laser-etched)</li>
-                    <li>Exclusive beta of voice module & founder calls</li>
-                </ul>
-            </div>
-             <div class="card">
-                <h3>$20k+ — Founding Benefactor</h3>
-                <ul>
-                    <li>Everything above</li>
-                    <li>Feature-veto right during the pilot phase</li>
-                    <li>Private on-site demo for your stakeholders</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="cta-section">
-            <h3>Pledge Your Support</h3>
-            <p>Choose the platform that works best for you. GoFundMe and Givebutter allow us to receive funds immediately, accelerating development even before the campaign ends.</p>
-            <div class="cta-container">
-                <a href="https://www.kickstarter.com/projects/fugthchat/fugth-chat-llcs-secure-offline-ai-pilot?ref=vip" class="cta-button" target="_blank" rel="noopener noreferrer">Pledge on Kickstarter</a>
-                <a href="https://gofund.me/31816e93" class="cta-button outlined" target="_blank" rel="noopener noreferrer">Support on GoFundMe</a>
-                <a href="https://givebutter.com/2jzj4p" class="cta-button outlined" target="_blank" rel="noopener noreferrer">Give via Givebutter</a>
-            </div>
-        </div>
-    </div>
-  </section>
-
-  <footer>
-    <p>© 2025 Fugth Chat LLC. All Rights Reserved.</p>
-    <a href="mailto:FugthChat@gmail.com">FugthChat@gmail.com</a>
-  </footer>
-  
-  <div id="password-modal" class="password-modal-overlay">
-    <div class="password-modal-content">
-        <h3>Password Required</h3>
-        <p>This section is for high-roller backers only. Please enter the password to continue.</p>
-        <input type="password" id="password-input" placeholder="Password">
-        <p id="password-error">Incorrect password. Please try again.</p>
-        <div class="password-modal-buttons">
-            <button id="password-cancel">Cancel</button>
-            <button id="password-submit">Enter</button>
+  <div id="quick-prompts-modal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+    <div class="bg-[var(--bg1)] p-6 rounded-xl border border-[var(--bg2)] shadow-lg w-full max-w-2xl relative">
+      <button id="modal-close-x" class="absolute top-4 right-4 text-[var(--fg1)] hover:text-[var(--fg0)] text-2xl font-bold">&times;</button>
+      <h3 class="text-lg font-bold text-[var(--accent)] mb-4">Quick Prompts</h3>
+      <div id="quick-prompts-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
         </div>
     </div>
   </div>
+  
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = sel => document.querySelector(sel);
 
-  <script>
-    (function() {
-      // Main site elements
-      const announcementBar = document.querySelector('.announcement-bar');
-      const announcementCloseBtn = document.querySelector('.announcement-close-btn');
-      const header = document.querySelector('header');
-      const tabs = document.querySelectorAll('.tab-btn:not(a)'); // Select only buttons, not the 'a' tag
-      
-      // REMOVED 'fugth-chat' from sections object
-      const sections = {
-        customer: document.getElementById('customer'),
-        investor: document.getElementById('investor'),
-        'high-roller': document.getElementById('high-roller')
-      };
-      
-      const passwordModal = document.getElementById('password-modal');
-      const passwordInput = document.getElementById('password-input');
-      const passwordSubmitBtn = document.getElementById('password-submit');
-      const passwordCancelBtn = document.getElementById('password-cancel');
-      const passwordError = document.getElementById('password-error');
-      
-      const correctPassword = 'FugthHighBackers0';
-      let pendingTabTarget = null;
-      let activeTabName = 'customer';
+    // --- 1. SETTINGS ---
+    // This is the permanent URL for your AI Brain on Hugging Face.
+    const HUGGING_FACE_URL = 'https://fugthchat-fugth-chat-ndm3-brain.hf.space';
 
-      function setHeaderPosition() {
-          if(!header || !announcementBar) return;
-          const announcementHeight = announcementBar.style.display === 'none' ? 0 : announcementBar.offsetHeight;
-          header.style.top = `${announcementHeight}px`;
-      }
-      
-      function showTab(tabName) {
-         if (!sections[tabName]) return;
-         
-         tabs.forEach(tab => tab.classList.remove('active'));
-         for (const key in sections) {
-             if (sections[key]) sections[key].classList.remove('active');
-         }
+    const PERSONAS = {
+        default: { name: 'Default Assistant', prompt: 'You are a helpful, friendly, and versatile AI assistant named FugthAI. You can answer questions, provide explanations, and assist with a wide range of tasks.' },
+        lawyer: { name: 'Lawyer', prompt: 'You are an AI Legal Advisor. Your role is to provide information on legal topics, explain legal concepts, and help draft documents. You are strictly forbidden from providing medical, financial, or any other type of advice outside the legal domain. If a user asks for non-legal advice, you MUST refuse and state clearly: "My expertise is strictly limited to legal matters. I cannot provide advice on that topic."' },
+        dentist: { name: 'Dentist', prompt: 'You are an AI Dental Advisor. Your purpose is to provide information about dental health, oral hygiene, and common dental procedures. You are not a substitute for a real medical professional. You are strictly forbidden from providing advice on any topic outside of dentistry and general oral health. If asked a non-dental question, you MUST refuse and state clearly: "I can only provide information about dental health. For other topics, please consult an appropriate expert."' },
+        sales: { name: 'Sales Expert', prompt: 'You are a master AI Sales Expert. Your goal is to provide users with world-class sales strategies, pitch advice, negotiation tactics, and motivational coaching. You must remain in the persona of a confident, persuasive, and highly knowledgeable sales leader. You are strictly forbidden from engaging in topics outside of sales, marketing, and business development. If asked to, you MUST refuse and pivot back, stating: "That\'s outside my area of expertise, which is sales. Let\'s focus on how we can crush your sales goals."' }
+    };
+    
+    const QUICK_PROMPTS = [
+        { title: "Explain Something", prompt: "Explain the concept of [topic] in simple terms." },
+        { title: "Write a Poem", prompt: "Write a short poem about [subject]." },
+        { title: "Brainstorm Ideas", prompt: "Brainstorm 5 ideas for a new project about [topic]." },
+        { title: "Summarize Text", prompt: "Summarize the following text for me: [paste text here]." },
+        { title: "Translate to French", prompt: "Translate the following sentence to French: " },
+        { title: "Create a Recipe", prompt: "Give me a simple recipe for [dish]." }
+    ];
 
-         const tabButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-         if(tabButton) tabButton.classList.add('active');
-         sections[tabName].classList.add('active');
-         activeTabName = tabName;
-      }
+    let state = {
+        chats: JSON.parse(localStorage.getItem('fugthai_chats_v9') || '[]'),
+        activeChatId: null,
+        isGenerating: false,
+        abortController: null,
+        theme: localStorage.getItem('fugthai_theme_v9') || 'dark'
+    };
 
-      function handleTabClick(e) {
-        e.preventDefault();
-        const clickedTab = e.currentTarget;
-        const targetTabName = clickedTab.getAttribute('data-tab');
+    const el = {
+        chatList: $('#chat-list'), chatTitle: $('#chat-title'), chatHistory: $('#chat-history'),
+        promptInput: $('#prompt-input'), sendBtn: $('#send-btn'), newChatBtn: $('#new-chat-btn'),
+        statusBar: $('#status-bar'), statusText: $('#status-text'), statusDot: $('#status-dot'),
+        searchInput: $('#search-chats-input'), systemPromptInput: $('#system-prompt-input'),
+        themeBtn: $('#theme-btn'), contextMenu: $('#context-menu'), renameChatBtn: $('#rename-chat'),
+        deleteChatBtn: $('#delete-chat'), leftSidebar: $('#left-sidebar'), rightSidebar: $('#right-sidebar'),
+        toggleLeftSidebar: $('#toggle-left-sidebar'), toggleRightSidebar: $('#toggle-right-sidebar'),
+        sidebarContent: $('#sidebar-content'), exportChatsBtn: $('#export-chats-btn'),
+        importChatsBtn: $('#import-chats-btn'), importChatsInput: $('#import-chats-input'),
+        helpBtn: $('#help-btn'), clearHistoryBtn: $('#clear-history-btn'), personaSelect: $('#persona-select'),
+        quickPromptsBtn: $('#quick-prompts-btn'), quickPromptsModal: $('#quick-prompts-modal'),
+        quickPromptsList: $('#quick-prompts-list'), modalCloseX: $('#modal-close-x')
+    };
+    
+    function init() {
+        Object.keys(PERSONAS).forEach(key => { el.personaSelect.add(new Option(PERSONAS[key].name, key)); });
+        el.personaSelect.add(new Option("Custom", "custom"));
+        QUICK_PROMPTS.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'p-4 bg-[var(--bg2)] rounded-lg hover:bg-[var(--bg3)] cursor-pointer transition-colors';
+            card.innerHTML = `<h4 class="font-bold text-sm text-[var(--accent)]">${p.title}</h4><p class="text-xs text-[var(--fg1)]">${p.prompt}</p>`;
+            card.onclick = () => {
+                el.promptInput.value = p.prompt;
+                el.quickPromptsModal.classList.add('hidden');
+                el.promptInput.focus();
+                autoResizeTextarea();
+            };
+            el.quickPromptsList.appendChild(card);
+        });
+
+        if (state.chats.length === 0) createNewChat();
+        state.activeChatId = state.activeChatId || state.chats[0].id;
         
-        if (targetTabName === activeTabName) return;
+        applyTheme();
+        renderChatList();
+        selectChat(state.activeChatId);
+        
+        addEventListeners();
+        autoResizeTextarea();
+        checkServerStatus(); // Attempt to connect to the server on startup
+    }
 
-        if (targetTabName === 'high-roller') {
-            pendingTabTarget = targetTabName;
-            passwordInput.value = '';
-            passwordError.style.display = 'none';
-            passwordModal.classList.add('visible');
-            passwordInput.focus();
-        } else {
-            showTab(targetTabName);
+    function saveChats() { localStorage.setItem('fugthai_chats_v9', JSON.stringify(state.chats)); }
+    
+    function createNewChat() {
+        const defaultPersona = 'default';
+        const c = { id: Date.now(), name: 'New Chat', history: [], persona: defaultPersona, system_prompt: PERSONAS[defaultPersona].prompt };
+        state.chats.unshift(c);
+        saveChats();
+        return c;
+    }
+
+    function applyTheme() {
+        document.documentElement.setAttribute('data-theme', state.theme);
+        localStorage.setItem('fugthai_theme_v9', state.theme);
+        el.themeBtn.innerHTML = state.theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    function renderChatList(filter = '') {
+        el.chatList.innerHTML = '';
+        const filtered = state.chats.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()));
+        filtered.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `sidebar-item flex items-center p-2 rounded cursor-pointer transition-colors ${c.id === state.activeChatId ? 'active' : ''}`;
+            div.innerHTML = `<i class="fa-regular fa-message w-6 text-center"></i><span class="ml-3 flex-grow truncate text-sm">${c.name}</span>`;
+            div.dataset.chatId = c.id;
+            el.chatList.appendChild(div);
+        });
+    }
+
+    function selectChat(id) {
+        if (!id && state.chats.length > 0) id = state.chats[0].id;
+        else if (!id) id = createNewChat().id;
+
+        state.activeChatId = id;
+        renderChatList(el.searchInput.value);
+        const chat = state.chats.find(c => c.id === id);
+        
+        if (chat) {
+            el.chatTitle.textContent = chat.name;
+            el.systemPromptInput.value = chat.system_prompt;
+            el.personaSelect.value = chat.persona || 'custom';
+            el.chatHistory.innerHTML = '';
+            chat.history.forEach((m, index) => addMessage(m.role, m.text, m.isError, false));
+            scrollToBottom();
         }
-      }
-      
-      function handlePasswordSubmit() {
-          if (passwordInput.value === correctPassword) {
-              passwordModal.classList.remove('visible');
-              if(pendingTabTarget) {
-                  showTab(pendingTabTarget);
-                  pendingTabTarget = null;
-              }
-          } else {
-              passwordError.style.display = 'block';
-              passwordInput.value = '';
-              passwordInput.focus();
-          }
-      }
-      
-      function handlePasswordCancel() {
-          passwordModal.classList.remove('visible');
-          pendingTabTarget = null;
-      }
+    }
+    
+    function addMessage(role, text, isError = false, save = true) {
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (!activeChat) return;
 
-      // Initial setup
-      setHeaderPosition();
-      showTab(activeTabName);
+        const who = role === 'user' ? 'You' : (isError ? 'System' : PERSONAS[activeChat.persona]?.name || 'Assistant');
+        const messageContainer = document.createElement('div');
+        messageContainer.className = 'message-container';
+        
+        const messageInner = document.createElement('div');
+        messageInner.className = 'flex items-start gap-4';
+        
+        const avatarColor = isError ? 'bg-[var(--danger)]' : role === 'user' ? 'bg-[var(--accent)]' : 'bg-[#A3BE8C]';
+        const avatar = `<div class="w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-xl font-bold text-[var(--accent-text)] flex-shrink-0">${who[0]}</div>`;
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-[var(--bg1)] p-4 rounded-lg relative group max-w-2xl w-full';
+        
+        const textContentDiv = document.createElement('div');
+        textContentDiv.className = 'text-base break-words prose';
+        textContentDiv.innerHTML = marked.parse(text);
+        
+        textContentDiv.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn absolute top-2 right-2 p-1.5 rounded-md hover:bg-[var(--bg3)] transition-all';
+        copyBtn.title = 'Copy';
+        copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>';
+        copyBtn.onclick = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(text);
+            copyBtn.innerHTML = '<i class="fa-solid fa-check text-green-400"></i>';
+            setTimeout(() => { copyBtn.innerHTML = '<i class="fa-regular fa-clipboard"></i>'; }, 1500);
+        };
 
-      // Event Listeners
-      if (announcementCloseBtn) {
-          announcementCloseBtn.addEventListener('click', () => {
-              announcementBar.style.display = 'none';
-              setHeaderPosition();
-          });
-      }
-      
-      tabs.forEach(btn => btn.addEventListener('click', handleTabClick));
-      window.addEventListener('resize', setHeaderPosition);
-      
-      // Password modal listeners
-      passwordSubmitBtn.addEventListener('click', handlePasswordSubmit);
-      passwordCancelBtn.addEventListener('click', handlePasswordCancel);
-      passwordInput.addEventListener('keydown', (e) => e.key === 'Enter' && handlePasswordSubmit());
-      passwordModal.addEventListener('click', (e) => e.target === passwordModal && handlePasswordCancel());
+        bubble.innerHTML = `<div class="flex justify-between items-center mb-2"><strong class="text-sm text-[var(--fg0)]">${who}</strong></div>`;
+        bubble.appendChild(textContentDiv);
+        bubble.appendChild(copyBtn);
+        
+        const bubbleOuter = bubble.outerHTML;
+        messageInner.innerHTML = role === 'user' ? `<div class="flex-grow"></div>${bubbleOuter}${avatar}` : `${avatar}${bubbleOuter}<div class="flex-grow"></div>`;
+        
+        messageContainer.appendChild(messageInner);
+        el.chatHistory.appendChild(messageContainer);
+        scrollToBottom();
 
-    })();
-  </script>
+        if (save && !isError) {
+            activeChat.history.push({ role, text });
+            saveChats();
+        }
+    }
+
+    function buildPrompt() {
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (!activeChat) return "";
+
+        let formattedPrompt = `<|system|>\n${activeChat.system_prompt}</s>\n`;
+        activeChat.history.forEach(msg => {
+            if (msg.role === 'user') {
+                formattedPrompt += `<|user|>\n${msg.text}</s>\n`;
+            } else if (msg.role === 'assistant') {
+                formattedPrompt += `<|assistant|>\n${msg.text}</s>\n`;
+            }
+        });
+        formattedPrompt += `<|assistant|>\n`;
+        return formattedPrompt;
+    }
+    
+    function scrollToBottom() { el.chatHistory.scrollTop = el.chatHistory.scrollHeight; }
+
+    async function checkServerStatus() {
+        updateStatus('connecting', 'Connecting to AI Server...');
+        try {
+            const response = await fetch(HUGGING_FACE_URL, { method: 'GET' });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'AI server is online') {
+                    updateStatus('connected', 'AI Server Online');
+                    el.promptInput.disabled = false;
+                    el.sendBtn.disabled = false;
+                } else {
+                    throw new Error('Unexpected server response');
+                }
+            } else {
+                 throw new Error(`Server sleeping or offline (Status: ${response.status})`);
+            }
+        } catch (error) {
+            updateStatus('failed', `Connection Failed. The server may be waking up. Please wait a minute and refresh.`);
+            console.error(error);
+        }
+    }
+    
+    function setGenerating(on) {
+        state.isGenerating = on;
+        el.promptInput.disabled = on;
+        el.sendBtn.disabled = on;
+        
+        if (on) {
+            el.sendBtn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+            updateStatus('generating', 'Assistant is thinking...');
+        } else {
+            el.sendBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+            updateStatus('connected', 'AI Server Online');
+        }
+    }
+    
+    async function getAiResponse() {
+        setGenerating(true);
+        state.abortController = new AbortController();
+        const prompt = buildPrompt();
+
+        try {
+            const res = await fetch(`${HUGGING_FACE_URL}/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt }),
+                signal: state.abortController.signal
+            });
+            if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+            
+            const data = await res.json();
+            return { success: true, response: data.response };
+
+        } catch (e) {
+            if (e.name === 'AbortError') {
+                return { success: false, response: 'Request cancelled by user.' };
+            }
+            return { success: false, response: `An error occurred: ${e.message}. Please try again.` };
+        } finally {
+            setGenerating(false);
+        }
+    }
+
+    function autoResizeTextarea() {
+        el.promptInput.style.height = 'auto';
+        const newHeight = Math.min(el.promptInput.scrollHeight, 200);
+        el.promptInput.style.height = `${newHeight}px`;
+    }
+    
+    function updateStatus(status, text) {
+        const statusMap = {
+            connecting: { text: 'Connecting to AI Server...', color: 'bg-yellow-500', pulse: true },
+            connected: { text: 'AI Server Online', color: 'bg-green-500', pulse: false },
+            generating: { text: 'Assistant is thinking...', color: 'bg-blue-500', pulse: true },
+            failed: { text, color: 'bg-[var(--danger)]', pulse: false }
+        };
+        const newStatus = statusMap[status];
+
+        el.statusText.textContent = newStatus.text;
+        el.statusDot.className = `w-2 h-2 rounded-full ${newStatus.color}`;
+        newStatus.pulse ? el.statusDot.classList.add('animate-pulse') : el.statusDot.classList.remove('animate-pulse');
+    }
+
+    async function handleSend() {
+        const promptText = el.promptInput.value.trim();
+        if (!promptText || state.isGenerating) return;
+
+        addMessage('user', promptText, false, true);
+
+        const activeChat = state.chats.find(c => c.id === state.activeChatId);
+        if (activeChat.history.length === 1) { // It has only the user message
+            activeChat.name = promptText.split(' ').slice(0, 4).join(' ');
+            renderChatList();
+            el.chatTitle.textContent = activeChat.name;
+        }
+        
+        el.promptInput.value = '';
+        autoResizeTextarea();
+
+        const result = await getAiResponse();
+        if (result.success) {
+            addMessage('assistant', result.response, false, true);
+        } else {
+            addMessage('assistant', result.response, true, false);
+        }
+    }
+
+    function addEventListeners() {
+        el.sendBtn.onclick = () => {
+            if (state.isGenerating) {
+                state.abortController?.abort();
+            } else {
+                handleSend();
+            }
+        };
+        el.promptInput.addEventListener('input', autoResizeTextarea);
+        el.promptInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }});
+        el.themeBtn.onclick = () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; applyTheme(); };
+        el.newChatBtn.onclick = () => { const newChat = createNewChat(); selectChat(newChat.id); };
+        el.searchInput.oninput = e => renderChatList(e.target.value);
+        el.chatList.onclick = e => { const id = e.target.closest('.sidebar-item')?.dataset.chatId; if(id) selectChat(parseInt(id)); };
+        
+        el.chatList.oncontextmenu = e => {
+            e.preventDefault();
+            const target = e.target.closest('.sidebar-item');
+            if (!target) return;
+            state.contextMenuChatId = parseInt(target.dataset.chatId);
+            el.contextMenu.style.top = `${e.clientY}px`;
+            el.contextMenu.style.left = `${e.clientX}px`;
+            el.contextMenu.style.display = 'block';
+        };
+
+        el.renameChatBtn.onclick = () => {
+            const chatToRename = state.chats.find(c => c.id === state.contextMenuChatId);
+            if (!chatToRename) return;
+            const newName = prompt('Enter new chat name:', chatToRename.name);
+            if (newName && newName.trim()) { 
+                chatToRename.name = newName.trim(); 
+                saveChats(); 
+                renderChatList(); 
+                if (chatToRename.id === state.activeChatId) {
+                    el.chatTitle.textContent = newName.trim(); 
+                }
+            }
+            el.contextMenu.style.display = 'none';
+        };
+
+        el.deleteChatBtn.onclick = () => {
+            if (confirm('Are you sure you want to delete this chat?')) {
+                state.chats = state.chats.filter(c => c.id !== state.contextMenuChatId);
+                saveChats();
+                if (state.activeChatId === state.contextMenuChatId) {
+                    selectChat(state.chats[0]?.id || null);
+                }
+                renderChatList();
+            }
+            el.contextMenu.style.display = 'none';
+        };
+        
+        el.clearHistoryBtn.onclick = () => {
+            if (!state.activeChatId) return;
+            if (confirm('Are you sure you want to clear the history for this chat? This cannot be undone.')) {
+                const chat = state.chats.find(c => c.id === state.activeChatId);
+                if (chat) { chat.history = []; saveChats(); selectChat(state.activeChatId); }
+            }
+        };
+
+        document.addEventListener('click', () => { if (el.contextMenu.style.display === 'block') el.contextMenu.style.display = 'none'; });
+
+        el.systemPromptInput.oninput = () => {
+            const chat = state.chats.find(c => c.id === state.activeChatId);
+            if(chat) { 
+                chat.system_prompt = el.systemPromptInput.value; 
+                chat.persona = 'custom'; 
+                el.personaSelect.value = 'custom'; 
+                saveChats(); 
+            }
+        };
+        
+        el.personaSelect.onchange = () => {
+            const personaKey = el.personaSelect.value;
+            const chat = state.chats.find(c => c.id === state.activeChatId);
+            if(chat && personaKey !== 'custom') { 
+                chat.persona = personaKey; 
+                chat.system_prompt = PERSONAS[personaKey].prompt; 
+                el.systemPromptInput.value = chat.system_prompt; 
+                saveChats(); 
+            }
+        };
+
+        el.toggleLeftSidebar.onclick = () => { el.leftSidebar.classList.toggle('w-72'); el.leftSidebar.classList.toggle('w-0'); el.leftSidebar.classList.toggle('p-4'); el.leftSidebar.classList.toggle('p-0'); };
+        el.toggleRightSidebar.onclick = () => { el.rightSidebar.classList.toggle('hidden'); };
+
+        // Modal Listeners
+        el.quickPromptsBtn.onclick = () => el.quickPromptsModal.classList.remove('hidden');
+        el.modalCloseX.onclick = () => el.quickPromptsModal.classList.add('hidden');
+        el.quickPromptsModal.onclick = (e) => { if (e.target === el.quickPromptsModal) el.quickPromptsModal.classList.add('hidden'); };
+    }
+    
+    init();
+});
+</script>
 </body>
 </html>
