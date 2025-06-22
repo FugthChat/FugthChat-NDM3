@@ -59,6 +59,7 @@
         ::-webkit-scrollbar-track { background: var(--bg-sidebar); }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #666; }
+        
         .chat-options-menu {
             position: absolute;
             z-index: 50;
@@ -68,17 +69,43 @@
             box-shadow: 0 4px 12px var(--shadow-color);
             padding: 4px;
         }
-        /* Mobile sidebar styles */
+
+        /* Sidebar hover/slide styles */
         #left-sidebar {
-            transition: transform 0.3s ease-in-out;
+            transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
-        @media (max-width: 768px) {
+
+        @media (min-width: 768px) {
+            #left-sidebar {
+                width: 5rem; /* Collapsed width */
+            }
+            #left-sidebar:hover {
+                width: 18rem; /* Expanded width */
+            }
+            main {
+                margin-left: 5rem;
+                transition: margin-left 0.3s ease-in-out;
+            }
+            #left-sidebar:hover + main {
+                margin-left: 18rem;
+            }
+            .sidebar-text, .sidebar-brand-text {
+                opacity: 0;
+                transition: opacity 0.2s ease-in-out;
+            }
+            #left-sidebar:hover .sidebar-text, #left-sidebar:hover .sidebar-brand-text {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 767.98px) {
             #left-sidebar {
                 position: fixed;
                 top: 0;
                 left: 0;
                 bottom: 0;
                 z-index: 40;
+                width: 18rem;
                 transform: translateX(-100%);
             }
             #left-sidebar.open {
@@ -106,24 +133,24 @@
 <body class="flex h-screen overflow-hidden antialiased">
     <div id="sidebar-overlay"></div>
     <!-- Left Sidebar for Chat History -->
-    <aside id="left-sidebar" class="bg-[var(--bg-sidebar)] w-72 p-4 flex flex-col border-r border-[var(--border-color)] flex-shrink-0 md:flex transition-all duration-300">
-        <div class="flex justify-between items-center mb-4 flex-shrink-0">
-            <h1 class="text-xl font-bold font-['Space_Grotesk']">Fugth<span class="text-[var(--accent)]">AI</span></h1>
-            <button id="theme-btn" class="hover:bg-black/10 dark:hover:bg-white/10 p-2 rounded-full text-lg">
+    <aside id="left-sidebar" class="bg-[var(--bg-sidebar)] p-4 flex flex-col border-r border-[var(--border-color)] flex-shrink-0">
+        <div class="flex items-center mb-4 flex-shrink-0">
+            <h1 class="text-xl font-bold font-['Space_Grotesk']">F<span class="sidebar-brand-text">ugth</span><span class="text-[var(--accent)] sidebar-brand-text">AI</span></h1>
+            <button id="theme-btn" class="hover:bg-black/10 dark:hover:bg-white/10 p-2 rounded-full text-lg ml-auto">
                 <i class="fa-solid fa-moon"></i>
             </button>
         </div>
         <div id="sidebar-content" class="flex flex-col flex-1 overflow-y-auto">
             <button id="new-chat-btn" class="w-full py-2 px-3 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 mb-4 transition-colors text-sm flex items-center justify-center">
-                <i class="fa-solid fa-plus mr-2"></i>New Chat
+                <i class="fa-solid fa-plus mr-2"></i><span class="sidebar-text">New Chat</span>
             </button>
             <nav id="chat-list" class="flex-1 overflow-y-auto space-y-1"></nav>
         </div>
          <div class="pt-4 border-t border-[var(--border-color)] space-y-2 text-sm">
-            <button id="import-chats-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-file-import w-6 text-[var(--text-secondary)]"></i><span class="ml-2">Import Chats</span></button>
+            <button id="import-chats-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-file-import w-6 text-[var(--text-secondary)]"></i><span class="ml-2 sidebar-text">Import Chats</span></button>
             <input type="file" id="import-chats-input" class="hidden" accept=".json">
-            <button id="export-chats-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-file-export w-6 text-[var(--text-secondary)]"></i><span class="ml-2">Export All Chats</span></button>
-            <button id="help-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-circle-question w-6 text-[var(--text-secondary)]"></i><span class="ml-2">Help & FAQ</span></button>
+            <button id="export-chats-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-file-export w-6 text-[var(--text-secondary)]"></i><span class="ml-2 sidebar-text">Export All Chats</span></button>
+            <button id="help-btn" class="w-full flex items-center py-2 px-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"><i class="fa-solid fa-circle-question w-6 text-[var(--text-secondary)]"></i><span class="ml-2 sidebar-text">Help & FAQ</span></button>
         </div>
     </aside>
 
@@ -186,7 +213,7 @@
     </main>
   
     <!-- Right Sidebar for Settings -->
-    <aside id="right-sidebar" class="sidebar bg-[var(--bg-sidebar)] lg:w-80 p-4 flex-col border-l border-[var(--border-color)] flex-shrink-0 space-y-4 overflow-y-auto hidden lg:flex transition-all duration-300">
+    <aside id="right-sidebar" class="sidebar bg-[var(--bg-sidebar)] w-80 p-4 flex-col border-l border-[var(--border-color)] flex-shrink-0 space-y-4 overflow-y-auto hidden lg:flex transition-all duration-300 fixed top-0 right-0 h-full z-20">
         <h3 class="font-bold text-lg font-['Space_Grotesk']">Settings</h3>
         <div class="p-4 rounded-lg bg-black/5 dark:bg-white/5">
             <h3 class="font-semibold text-[var(--text-primary)] mb-2">Persona</h3>
@@ -209,24 +236,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const HUGGING_FACE_URL = 'https://fugthchat-fugth-chat-ndm3-brain.hf.space';
     const MAX_CONTEXT_TOKENS = 800;
     const CONVERSATION_WINDOW_SIZE = 6; 
+    const SIDEBAR_AUTO_CLOSE_DELAY = 7000; // 7 seconds
 
     const PERSONAS = {
-        default: { name: 'Default Assistant', prompt: 'You are a helpful, friendly, and versatile AI assistant named FugthAI. You can answer questions, provide explanations, and assist with a wide range of tasks.' },
-        lawyer: { name: 'Lawyer', prompt: 'You are an AI Legal Advisor. Your role is to provide information on legal topics, explain legal concepts, and help draft documents. You are strictly forbidden from providing medical, financial, or any other type of advice outside the legal domain. If a user asks for non-legal advice, you MUST refuse and state clearly: "My expertise is strictly limited to legal matters. I cannot provide advice on that topic."' },
-        dentist: { name: 'Dentist', prompt: 'You are an AI Dental Advisor. Your purpose is to provide information about dental health, oral hygiene, and common dental procedures. You are not a substitute for a real medical professional. You are strictly forbidden from providing advice on any topic outside of dentistry and general oral health. If asked a non-dental question, you MUST refuse and state clearly: "I can only provide information about dental health. For other topics, please consult an appropriate expert."' },
-        sales: { name: 'Sales Expert', prompt: 'You are a master AI Sales Expert. Your goal is to provide users with world-class sales strategies, pitch advice, negotiation tactics, and motivational coaching. You must remain in the persona of a confident, persuasive, and highly knowledgeable sales leader. You are strictly forbidden from engaging in topics outside of sales, marketing, and business development. If asked to, you MUST refuse and pivot back, stating: "That\'s outside my area of expertise, which is sales. Let\'s focus on how we can crush your sales goals."' }
+        default: { name: 'Default Assistant', prompt: 'I am a helpful, friendly, and versatile AI assistant named FugthAI. I can answer questions, provide explanations, and assist with a wide range of tasks.' },
+        lawyer: { name: 'Lawyer', prompt: 'I am an AI Legal Advisor. My role is to provide information on legal topics, explain legal concepts, and help draft documents. I am strictly forbidden from providing medical, financial, or any other type of advice outside the legal domain. If a user asks for non-legal advice, I MUST refuse and state clearly: "My expertise is strictly limited to legal matters. I cannot provide advice on that topic."' },
+        dentist: { name: 'Dentist', prompt: 'I am an AI Dental Advisor. My purpose is to provide information about dental health, oral hygiene, and common dental procedures. I am not a substitute for a real medical professional. I am strictly forbidden from providing advice on any topic outside of dentistry and general oral health. If asked a non-dental question, I MUST refuse and state clearly: "I can only provide information about dental health. For other topics, please consult an appropriate expert."' },
+        sales: { name: 'Sales Expert', prompt: 'I am a master AI Sales Expert. My goal is to provide users with world-class sales strategies, pitch advice, negotiation tactics, and motivational coaching. I must remain in the persona of a confident, persuasive, and highly knowledgeable sales leader. I am strictly forbidden from engaging in topics outside of sales, marketing, and business development. If asked to, I MUST refuse and pivot back, stating: "That\'s outside my area of expertise, which is sales. Let\'s focus on how we can crush your sales goals."' }
     };
     
     let state = {
-        chats: JSON.parse(localStorage.getItem('fugthai_chats_v13') || '[]'),
+        chats: JSON.parse(localStorage.getItem('fugthai_chats_v14') || '[]'),
         activeChatId: null,
         isGenerating: false,
         abortController: null,
-        theme: localStorage.getItem('fugthai_theme_v13') || 'light', // Default to light theme
+        theme: localStorage.getItem('fugthai_theme_v14') || 'light',
         activeMenuChatId: null,
+        sidebarCloseTimer: null,
     };
 
     const el = {
+        // Omitting for brevity, they are all correctly selected as before
         leftSidebar: $('#left-sidebar'),
         rightSidebar: $('#right-sidebar'),
         toggleLeftSidebar: $('#toggle-left-sidebar'),
@@ -254,6 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarOverlay: $('#sidebar-overlay'),
     };
     
+    // All other functions (init, saveChats, etc.) remain largely the same,
+    // so I will only show the modified functions for clarity.
+    
     function init() {
         Object.keys(PERSONAS).forEach(key => el.personaSelect.add(new Option(PERSONAS[key].name, key)));
         el.personaSelect.add(new Option("Custom", "custom"));
@@ -269,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveChats() {
-        localStorage.setItem('fugthai_chats_v13', JSON.stringify(state.chats));
+        localStorage.setItem('fugthai_chats_v14', JSON.stringify(state.chats));
     }
     
     function createNewChat() {
@@ -289,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyTheme() {
         document.documentElement.setAttribute('data-theme', state.theme);
-        localStorage.setItem('fugthai_theme_v13', state.theme);
+        localStorage.setItem('fugthai_theme_v14', state.theme);
         el.themeBtn.innerHTML = state.theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
     }
 
@@ -307,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pinIcon = c.pinned ? `<i class="fa-solid fa-thumbtack text-[var(--accent)] text-xs w-6 text-center"></i>` : `<i class="fa-regular fa-message w-6 text-center text-[var(--text-secondary)]"></i>`;
             div.innerHTML = `
                 ${pinIcon}
-                <span class="ml-1 flex-grow truncate text-sm">${c.name}</span>
+                <span class="ml-1 flex-grow truncate text-sm sidebar-text">${c.name}</span>
                 <button data-action="toggle-menu" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full text-transparent group-hover:text-[var(--text-secondary)] hover:bg-black/10 dark:hover:bg-white/10">
                     <i class="fa-solid fa-ellipsis-h"></i>
                 </button>
@@ -486,6 +519,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleSend() {
+        // Auto-close mobile sidebar if open
+        if (el.leftSidebar.classList.contains('open')) {
+            clearTimeout(state.sidebarCloseTimer); // Clear any existing timer
+            state.sidebarCloseTimer = setTimeout(() => {
+                el.leftSidebar.classList.remove('open');
+                el.sidebarOverlay.classList.remove('open');
+            }, SIDEBAR_AUTO_CLOSE_DELAY);
+        }
+
         const promptText = el.promptInput.value.trim();
         if (!promptText || state.isGenerating) return;
         addMessage('user', promptText, false, true);
@@ -561,6 +603,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 else toggleChatOptionsMenu(chatId, menuButton);
             } else {
                 selectChat(parseInt(chatItem.dataset.chatId));
+                if (window.innerWidth < 768) {
+                    el.leftSidebar.classList.remove('open');
+                    el.sidebarOverlay.classList.remove('open');
+                }
             }
         });
         
@@ -610,8 +656,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if(chat && personaKey !== 'custom') { chat.persona = personaKey; chat.system_prompt = PERSONAS[personaKey].prompt; el.systemPromptInput.value = chat.system_prompt; saveChats(); }
         };
 
-        el.toggleLeftSidebar.onclick = () => el.leftSidebar.classList.add('open');
-        el.sidebarOverlay.onclick = () => el.leftSidebar.classList.remove('open');
+        el.toggleLeftSidebar.onclick = () => {
+            el.leftSidebar.classList.add('open');
+            el.sidebarOverlay.classList.add('open');
+        };
+        el.sidebarOverlay.onclick = () => {
+            el.leftSidebar.classList.remove('open');
+            el.sidebarOverlay.classList.remove('open');
+        };
+
         el.toggleRightSidebar.onclick = () => el.rightSidebar.classList.toggle('hidden');
 
         el.importChatsBtn.onclick = () => el.importChatsInput.click();
@@ -649,4 +702,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
-</ht
+</html>
